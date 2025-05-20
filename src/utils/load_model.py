@@ -26,10 +26,10 @@ def load_model(model_name: str, checkpoint: str):
     elif model_name == "TimeSformer":
         from src.models.timesformer import TimeSformer
         model = TimeSformer()
-    elif model_name == "LLavaNext":
+    elif model_name == "LLaVANeXT":
         from src.models.llavanext import LlavaNext
         model = LlavaNext(checkpoint=checkpoint)
-    elif model_name == "LLavaNext34":
+    elif model_name == "LLaVANeXT34":
         from src.models.llavanext34 import LlavaNext34
         model = LlavaNext34(checkpoint=checkpoint)
     else:
