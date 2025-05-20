@@ -1,4 +1,4 @@
-from models.basemodel import BaseModel
+from src.models.basemodel import BaseModel
 import torch
 from transformers import AutoImageProcessor, TimesformerForVideoClassification, TimesformerConfig
 from torch.amp import GradScaler, autocast

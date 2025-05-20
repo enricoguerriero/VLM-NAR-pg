@@ -1,6 +1,6 @@
 from transformers import AutoProcessor
 from transformers import Idefics3ForConditionalGeneration
-from models.basemodel import BaseModel
+from src.models.basemodel import BaseModel
 import torch
 import re
 import torch.nn as nn

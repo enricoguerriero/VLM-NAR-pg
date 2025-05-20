@@ -1,4 +1,4 @@
-from models.llavanext import LlavaNext
+from src.models.llavanext import LlavaNext
 from transformers import LlavaNextVideoForConditionalGeneration, AutoProcessor
 import torch
 import torch.nn as nn

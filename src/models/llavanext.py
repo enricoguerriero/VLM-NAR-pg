@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import LlavaNextVideoForConditionalGeneration, AutoProcessor
-from models.basemodel import BaseModel
+from src.models.basemodel import BaseModel
 from peft import LoraConfig, get_peft_model, TaskType
 
 class LlavaNext(BaseModel):

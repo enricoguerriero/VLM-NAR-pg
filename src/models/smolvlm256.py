@@ -1,4 +1,4 @@
-from models.smolvlm import SmolVLM
+from src.models.smolvlm import SmolVLM
 from transformers import AutoProcessor, Idefics3ForConditionalGeneration
 import torch
 import torch.nn as nn
