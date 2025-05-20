@@ -1,0 +1,26 @@
+frame_per_second: 8
+
+token_batch_size: 16
+batch_size: 128
+optimizer: "adamw"
+learning_rate: 0.0001
+weight_decay: 0.0002
+criterion: "wbce"
+scheduler: "cosineannealinglr"
+patience: 5
+epochs: 15
+threshold: 0.5
+num_workers: 0
+freezing_condition: "lora"
+eta_min: 0.001
+
+
+system_message_0s: |
+  You are assisting in a newborn resuscitation simulation. The video is recorded from above a resuscitation table. A mannequin representing a newborn baby may or may not be present. Based on the visual evidence, respond to the following questions. Be explicit and unambiguous.
+
+prompts_0s:
+  - "Describe the scene in the clip and give it a caption. Is the baby or mannequin present on the resuscitation table? Be explicit and clear about visibility."
+  - "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker holding a large ventilation mask over the mannequin's face, covering both mouth and nose? This action supports breathing and is distinct from tube insertion. Be explicit. If there is not a baby / mannequin visible, no treatment is being performed."
+  - "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker performing up-and-down stimulation on the mannequin's back, buttocks, or trunk? These are small, quick movements. Be clear and specific. If there is not a baby / mannequin visible, no treatment is being performed."
+  - "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker inserting a small tube into the mouth or nose of the mannequin to provide suction? This cannot occur at the same time as mask ventilation. Be explicit. If there is not a baby / mannequin visible, no treatment is being performed."
+
