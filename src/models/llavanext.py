@@ -14,7 +14,7 @@ class LlavaNext(BaseModel):
                  lora_modality = "language"):
         super().__init__()
         
-        self.model_name = "LLavaNext"
+        self.model_name = "LLaVANeXT"
         self.device = torch.device(device) if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         if checkpoint:
@@ -111,6 +111,7 @@ class LlavaNext(BaseModel):
             text=final_prompt,
             return_tensors="pt",
             padding=True,
+            do_rescale=False,
         )
         
         return inputs
@@ -180,9 +181,6 @@ class LlavaNext(BaseModel):
         """
         Extract features from the model.
         """
-        # print(f"pixel_values: {pixel_values}", flush=True)
-        # print(f"input_ids: {input_ids}", flush=True)
-        # print(f"attention_mask: {attention_mask}", flush=True)
         outputs = self.backbone(
             pixel_values_videos=pixel_values_videos,
             input_ids=input_ids,

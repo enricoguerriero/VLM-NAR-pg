@@ -99,6 +99,7 @@ class VideoLlava(BaseModel):
             text = final_prompt,
             videos = video,
             padding = True,
+            do_rescale = False,
             return_tensors = "pt")
         
         return inputs
