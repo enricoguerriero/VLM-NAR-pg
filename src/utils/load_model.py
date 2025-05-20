@@ -15,22 +15,22 @@ def load_model(model_name: str, checkpoint: str):
         raise FileNotFoundError(f"Checkpoint file {checkpoint} does not exist.")
     
     if model_name == "VideoLLaVA":
-        from models.videollava import VideoLlava
+        from src.models.videollava import VideoLlava
         model = VideoLlava(checkpoint_path=checkpoint)
     elif model_name == "SmolVLM":
-        from models.smolvlm import SmolVLM
+        from src.models.smolvlm import SmolVLM
         model = SmolVLM(checkpoint=checkpoint)
     elif model_name == "SmolVLM256":
-        from models.smolvlm256 import SmolVLM256
+        from src.models.smolvlm256 import SmolVLM256
         model = SmolVLM256(checkpoint=checkpoint)
     elif model_name == "TimeSformer":
-        from models.timesformer import TimeSformer
+        from src.models.timesformer import TimeSformer
         model = TimeSformer()
     elif model_name == "LLavaNext":
-        from models.llavanext import LlavaNext
+        from src.models.llavanext import LlavaNext
         model = LlavaNext(checkpoint=checkpoint)
     elif model_name == "LLavaNext34":
-        from models.llavanext34 import LlavaNext34
+        from src.models.llavanext34 import LlavaNext34
         model = LlavaNext34(checkpoint=checkpoint)
     else:
         raise ValueError(f"Unknown model name: {model_name}")
