@@ -24,7 +24,6 @@ def main():
     model_name = args.model_name
     
     set_global_seed()
-    model = load_model(model_name, None)
     logger = setup_logging(model_name, "export_tokens")
     config = load_config(model_name)
     
@@ -33,7 +32,7 @@ def main():
     logger.info("-" * 20)
     
     logger.info("Loading model...")
-    model = load_model(model_name)
+    model = load_model(model_name, None)
     logger.info("Model loaded successfully.")
     
     logger.info("Loading dataset...")
