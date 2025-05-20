@@ -73,46 +73,38 @@ class SmolVLM(BaseModel):
             loss = None
         return {"loss": loss, "logits": logits}
     
-    def prompt_definition(self, video: list, prompt: str, system_message: str = None):
-        """
-        Prepares the input for the model.
-        """
-        image_tokens = [{"type": "image"} for _ in range(len(video))]
-        
-        prompt_template = [
-            {
-                "role": "system",
-                "content": [
-                    {"type": "text", "text": system_message},
-                ]
-            },
-            {
-                "role": "user",
-                "content": [
-                    *image_tokens,
-                    {"type": "text", "text": prompt}
-                ]
-            }
-        ]
-        
-        prompt = self.processor.apply_chat_template(prompt_template, add_generation_prompt=True)
-        
-        return prompt
     
     def process_input(self, video: list, prompt: str, system_message: str = None):
         """
         Processes the input video and prompt.
         """
-        final_prompt = self.prompt_definition(video, prompt, system_message)
         
-        return self.processor(
-            text=final_prompt,
-            images=video,
+        conv = []
+        if system_message:
+            conv.append({
+                "role": "system",
+                "content": [{"type": "text", "text": system_message}],
+            })
+        conv.append({
+            "role": "user",
+            "content": [
+                {"type": "video", "frames": video},
+                {"type": "text",  "text": prompt},
+            ],
+        })
+        
+        model_inputs = self.processor.apply_chat_template(
+            conv,
+            add_generation_prompt=True,
+            tokenize=True,
             return_tensors="pt",
-            padding=True,
-            truncation=True
-        ).to(self.device)
+            return_dict=True,
+        )
         
+        return {
+            k: v.to(self.device, dtype=torch.bfloat16)
+            for k, v in model_inputs.items()
+        }
     
     def set_freezing_condition(self, mode: str):
         """
