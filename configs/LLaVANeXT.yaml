@@ -1,3 +1,5 @@
+frame_per_second: 8
+
 token_batch_size: 16
 batch_size: 128
 optimizer: "adamw"
