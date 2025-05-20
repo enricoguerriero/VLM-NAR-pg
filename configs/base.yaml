@@ -1,7 +1,7 @@
 video_folder: "data/videos"
 annotation_folder: "data/annotations"
-token_dir: "data/tokens"
-feature_dir: "data/features"
+token_folder: "data/tokens"
+feature_folder: "data/features"
 
 clip_length: 2
 overlapping: 0.5

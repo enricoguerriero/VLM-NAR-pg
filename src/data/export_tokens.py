@@ -37,9 +37,9 @@ def main():
     
     logger.info("Loading dataset...")
     train_dataset = ClipDataset(
-        video_folder = os.path.join(config["video_dir"],
+        video_folder = os.path.join(config["video_folder"],
                                     "train"),
-        annotation_folder = os.path.join(config["annotation_dir"],
+        annotation_folder = os.path.join(config["annotation_folder"],
                                           "train"),
         clip_length = config["clip_length"],
         overlapping = config["overlapping"],
@@ -47,9 +47,9 @@ def main():
     )
     logger.info("Train dataset loaded successfully.")
     validation_dataset = ClipDataset(
-        video_folder = os.path.join(config["video_dir"],
+        video_folder = os.path.join(config["video_folder"],
                                     "validation"),
-        annotation_folder = os.path.join(config["annotation_dir"],
+        annotation_folder = os.path.join(config["annotation_folder"],
                                           "validation"),
         clip_length = config["clip_length"],
         overlapping = config["overlapping"],
@@ -57,9 +57,9 @@ def main():
     )
     logger.info("Validation dataset loaded successfully.")
     test_dataset = ClipDataset(
-        video_folder = os.path.join(config["video_dir"],
+        video_folder = os.path.join(config["video_folder"],
                                     "test"),
-        annotation_folder = os.path.join(config["annotation_dir"],
+        annotation_folder = os.path.join(config["annotation_folder"],
                                           "test"),
         clip_length = config["clip_length"],
         overlapping = config["overlapping"],
@@ -68,7 +68,7 @@ def main():
     logger.info("Test dataset loaded successfully.")
     
     logger.info("Exporting tokens...")
-    os.makedirs(os.path.join(config["token_dir"],
+    os.makedirs(os.path.join(config["token_folder"],
                              model_name,
                              "train"), exist_ok=True)
     for i, clip in tqdm(enumerate(train_dataset), desc="Exporting train tokens"):
@@ -80,7 +80,7 @@ def main():
                                      config["prompt"], 
                                      config["system_message"])
     
-        file_name = os.path.join(config["token_dir"],
+        file_name = os.path.join(config["token_folder"],
                            model_name,
                            "train",
                            f"clip_{i}.pt")
@@ -90,7 +90,7 @@ def main():
         }, file_name)
     logger.info("Train tokens exported successfully.")
     
-    os.makedirs(os.path.join(config["token_dir"],
+    os.makedirs(os.path.join(config["token_folder"],
                                 model_name,
                                 "validation"), exist_ok=True)
     for i, clip in tqdm(enumerate(validation_dataset), desc="Exporting validation tokens"):
@@ -102,7 +102,7 @@ def main():
                                      config["prompt"], 
                                      config["system_message"])
     
-        file_name = os.path.join(config["token_dir"],
+        file_name = os.path.join(config["token_folder"],
                            model_name,
                            "validation",
                            f"clip_{i}.pt")
@@ -112,7 +112,7 @@ def main():
         }, file_name)
     logger.info("Validation tokens exported successfully.")
     
-    os.makedirs(os.path.join(config["token_dir"],
+    os.makedirs(os.path.join(config["token_folder"],
                                 model_name,
                                 "test"), exist_ok=True)
     for i, clip in tqdm(enumerate(test_dataset), desc="Exporting test tokens"):
@@ -124,7 +124,7 @@ def main():
                                      config["prompt"], 
                                      config["system_message"])
     
-        file_name = os.path.join(config["token_dir"],
+        file_name = os.path.join(config["token_folder"],
                            model_name,
                            "test",
                            f"clip_{i}.pt")
