@@ -1,0 +1,5 @@
+/data/
+outputs/
+logs/
+__pycache__/
+.env
