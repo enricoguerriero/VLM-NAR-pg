@@ -77,26 +77,26 @@ class BaseModel(nn.Module):
         """
         self.pos_weights = weights
         
-    def save_model(self):
+    def save_model(self, str_to_add = ""):
         """
         Save the model to a file.
         """
-        model_path = os.path.join("models/saved", self.model_name)
+        model_path = "models"
         os.makedirs(model_path, exist_ok=True)
-        torch.save(self.state_dict(), os.path.join(model_path, "model.pth"))   
+        torch.save(self.state_dict(), os.path.join(model_path, f"{self.model_name}{str_to_add}.pth"))   
     
     def save_checkpoint(self, epoch, optimizer, scheduler):
         """
         Save the model checkpoint.
         """
-        checkpoint_path = os.path.join("models/saved", self.model_name, "checkpoints")
+        checkpoint_path = "models/checkpoints"
         os.makedirs(checkpoint_path, exist_ok=True)
         torch.save({
             'epoch': epoch,
             'model_state_dict': self.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'scheduler_state_dict': scheduler.state_dict(),
-        }, os.path.join(checkpoint_path, f"checkpoint_{epoch}.pth"))     
+        }, os.path.join(checkpoint_path, f"{self.model_name}_checkpoint_{epoch}.pth"))     
         
     def define_optimizer(self, 
                          optimizer_name: str, 
@@ -479,30 +479,6 @@ class BaseModel(nn.Module):
         labels_tensor = torch.cat(labels_list)
         avg_loss = total_loss / total_samples if total_samples > 0 else 0.0
         return avg_loss, logits_tensor, labels_tensor
-        
-    
-    def test_from_tokens(self,
-                   test_dataloader: DataLoader,
-                   criterion_name: str = None,
-                   pos_weight: torch.Tensor = None,
-                   threshold: float | torch.Tensor = 0.5,
-                   wandb_run=None):
-        """
-        Test the model.
-        """
-        criterion = self.define_criterion(criterion_name = criterion_name,
-                                          pos_weight = pos_weight)
-        test_loss, test_logits, test_labels = self.eval_epoch(test_dataloader, criterion)
-        
-        test_metrics = self.metric_computation(test_logits, test_labels, threshold)
-        
-        if wandb_run is not None:
-            self.log_test_wandb(wandb_run = wandb_run, 
-                                test_loss = test_loss, 
-                                test_metrics = test_metrics)
-        
-        return {"test_loss": test_loss,
-                "test_metrics": test_metrics}
         
 
 

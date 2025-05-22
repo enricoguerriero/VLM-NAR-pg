@@ -1,9 +1,8 @@
 #!/bin/bash
-#SBATCH --gres=gpu:0
-#SBATCH --partition=cpu64
+#SBATCH --partition=cpu36
 #SBATCH --time=48:00:00
-#SBATCH --job-name=export_tokens
-#SBATCH --output=outputs/export_tokens.out
+#SBATCH --job-name=train_from_features
+#SBATCH --output=outputs/train_from_features.out
 
 # Activate the user environment (uenv)
 uenv verbose cuda-12.2.0 cudnn-12.x-8.8.0
@@ -15,7 +14,7 @@ source activate NewbornEnv
 echo "virtual environment activated"
 
 export PYTHONPATH=./
-python src/data/export_tokens.py \
-    --model_name "VideoLLaVA"
+python src/training/train_from_features.py \
+    --model_name "VideoLLaVA" \
 
 echo "--- THE END ---"
