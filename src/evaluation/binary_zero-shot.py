@@ -63,138 +63,142 @@ def main():
         model = judge_model,
         tokenizer = judge_tokenizer,
         task = "text-generation",
-        pad_token_id = judge_tokenizer.eos_token_id
+        pad_token_id = judge_tokenizer.eos_token_id,
+        device = 0 if torch.cuda.is_available() else -1
     )
     logger.info("Judge model loaded successfully.")
     logger.info("-" * 20)
     
     LABELS = ["Baby visible", "Ventilation", "Stimulation", "Suction"]
     
-    def judge_answer(answer, class_idx):
-        
-        prompts = [
-            f"""
-            You are a judge. You are given the description of a small clip from a VLM model. 
-            The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-            The description given from the model is the following:
-            '{answer}'
-            According to the description, is there a baby / mannequin / doll visible in the clip?
-            Note that, if the caption refers to a doll, it means that the mannequin is visible.
-            Start your answer with "yes" or "no".
-            """,
-            f"""
-            You are a judge. You are given the description of a small clip from a VLM model. 
-            The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-            The description given from the model is the following:
-            '{answer}'
-            According to the description, are the health workers holding a ventilation mask over the baby's (or mannequin's) face? 
-            The mask is supposed to cover the mouth and nose of the baby.
-            Note that it has to be a ventilation mask, not just a tube.
-            Start your answer with "yes" or "no".
-            """,
-            f"""
-            You are a judge. You are given the description of a small clip from a VLM model.
-            The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-            The description given from the model is the following:
-            '{answer}'
-            According to the description, are the health workers applying stimulation to the baby's (or mannequin's) back, buttocks (nates), or trunk, using up-and-down movements?
-            The stimulation is supposed to be applied to the back, buttocks (nates), or trunk.
-            Note that the stimulation can occur simultaneously with ventilation or suction.
-            Start your answer with "yes" or "no".
-            """,
-            f"""
-            You are a judge. You are given the description of a small clip from a VLM model.
-            The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-            The description given from the model is the following:
-            '{answer}'
-            According to the description, are the health workers inserting a small suction tube into the baby's (or mannequin's) mouth or nose?
-            The suction tube is supposed to be inserted into the mouth or nose of the baby.
-            Note that it has to be a tube, not a mask.
-            Start your answer with "yes" or "no".
-            """            
-        ]
-        output = judge_pipe(prompts[class_idx],
-                            max_new_tokens=32, 
-                            do_sample=True,
-                            eos_token_id=judge_tokenizer.eos_token_id)
-        out = output[0]["generated_text"]
-        answer = out.split('[/INST]')[-1].strip()
-        answer = answer.strip().splitlines()[-1].strip().lower()
-        return answer.startswith("yes"), answer
+    PROMPTS = [
+        """
+        You are a judge. You are given the description of a small clip from a VLM model. 
+        The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
+        The description given from the model is the following:
+        '{answer}'
+        According to the description, is there a baby / mannequin / doll visible in the clip?
+        Note that, if the caption refers to a doll, it means that the mannequin is visible.
+        Start your answer with "yes" or "no".
+        """,
+        """
+        You are a judge. You are given the description of a small clip from a VLM model. 
+        The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
+        The description given from the model is the following:
+        '{answer}'
+        According to the description, are the health workers holding a ventilation mask over the baby's (or mannequin's) face? 
+        The mask is supposed to cover the mouth and nose of the baby.
+        Note that it has to be a ventilation mask, not just a tube.
+        Start your answer with "yes" or "no".
+        """,
+        """
+        You are a judge. You are given the description of a small clip from a VLM model.
+        The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
+        The description given from the model is the following:
+        '{answer}'
+        According to the description, are the health workers applying stimulation to the baby's (or mannequin's) back, buttocks (nates), or trunk, using up-and-down movements?
+        The stimulation is supposed to be applied to the back, buttocks (nates), or trunk.
+        Note that the stimulation can occur simultaneously with ventilation or suction.
+        Start your answer with "yes" or "no".
+        """,
+        """
+        You are a judge. You are given the description of a small clip from a VLM model.
+        The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
+        The description given from the model is the following:
+        '{answer}'
+        According to the description, are the health workers inserting a small suction tube into the baby's (or mannequin's) mouth or nose?
+        The suction tube is supposed to be inserted into the mouth or nose of the baby.
+        Note that it has to be a tube, not a mask.
+        Start your answer with "yes" or "no".
+        """            
+    ]
+    all_entries = []
+    prompts = []
     
-    # Initialize counters
-    TP = [0]*4; FP = [0]*4; TN = [0]*4; FN = [0]*4
-    total = 0
-    all_preds = []
-    
-    # ----------------------------
-    # Main testing loop
-    # ----------------------------
-    for i, clip in tqdm(enumerate(test_dataset), total=len(test_dataset), desc="Testing clips"):
+    # def judge_answer(answer, class_idx):
         
+    #     output = judge_pipe(prompts[class_idx],
+    #                         max_new_tokens=32, 
+    #                         do_sample=True,
+    #                         eos_token_id=judge_tokenizer.eos_token_id)
+    #     out = output[0]["generated_text"]
+    #     answer = out.split('[/INST]')[-1].strip()
+    #     answer = answer.strip().splitlines()[-1].strip().lower()
+    #     return answer.startswith("yes"), answer
+    
+    for idx, clip in tqdm(enumerate(test_dataset), total=len(test_dataset), desc="Preparing prompts"):
         class_idx = clip["class_idx"]
         label = clip["label"]
-        
-        # 1) Generate the caption/answer from your model
+
+        # generate caption
         caption = model.generate_answer(inputs=clip, max_new_tokens=128, do_sample=False)
-        
-        # 2) Ask the judge model for each label
-        pred, answer = judge_answer(caption, class_idx)
-        
-        # 3) Update the counters
-        if pred and label:
-            TP[class_idx] += 1
-        elif pred and not label:
-            FP[class_idx] += 1
-        elif not pred and label:
-            FN[class_idx] += 1
-        else:
-            TN[class_idx] += 1
-            
-        # 4) Update the all preds list
-        all_preds.append({
-            "clip": i,
-            "pred": pred,
+
+        # build judge prompt
+        prompt = PROMPTS[class_idx].replace("{answer}", caption)
+        prompts.append(prompt)
+
+        all_entries.append({
+            "clip_idx": idx,
+            "class_idx": class_idx,
             "label": label,
-            "answer": answer,
             "caption": caption
         })
-        total += 1
         
-        logger.debug("-" * 20)
-        logger.debug(f"Clip {i}: {clip}")
-        logger.debug(f"Class: {LABELS[class_idx]}")
-        logger.debug(f"Real label: {label}")
-        logger.debug(f"Caption: {caption}")
-        logger.debug(f"Answer: {answer}")
-        logger.debug(f"Predicted label: {pred}")
-        logger.debug("-" * 20)
-    # ----------------------------
+    checkpoint_path = os.path.join("data/captions", f"{args.model_name}_zero_shot_checkpoint.json")
+    os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
+    with open(checkpoint_path, "w") as ckpt_f:
+        json.dump({
+            "entries": all_entries,
+            "prompts": prompts
+        }, ckpt_f, indent=2)
+    logger.info(f"Checkpoint saved with {len(all_entries)} entries to {checkpoint_path}")
+    
+    logger.info(f"Running judge pipeline on {len(prompts)} prompts in batches...")
+    outputs = judge_pipe(
+        prompts,
+        max_new_tokens=32,
+        do_sample=True,
+        batch_size=16,       # adjust to fit your GPU memory
+        eos_token_id=judge_tokenizer.eos_token_id
+    )
+
+    
+    TP = [0]*4; FP = [0]*4; TN = [0]*4; FN = [0]*4
+    all_preds = []
+    total = len(all_entries)
+
+    for entry, out in zip(all_entries, outputs):
+        raw = out["generated_text"]
+        answer = raw.split('[/INST]')[-1].strip().splitlines()[-1].lower()
+        pred = answer.startswith("yes")
+
+        c = entry["class_idx"]
+        truth = entry["label"]
+
+        if pred and truth:      TP[c] += 1
+        elif pred and not truth: FP[c] += 1
+        elif not pred and truth: FN[c] += 1
+        else:                    TN[c] += 1
+
+        all_preds.append({
+            **entry,
+            "pred": pred,
+            "answer": answer
+        })
     
     
-    # number of samples and classes
     N = total
     C = len(LABELS)
-
     logits = torch.zeros(N, C)
     labels = torch.zeros(N, C)
 
-    for entry in all_preds:
-        i        = entry["clip"]        # sample index
-        c_idx    = entry["class_idx"]   # which of the 4 classes
-        pred     = entry["pred"]        # bool – did judge say yes?
-        truth    = entry["label"]       # bool – the gold label
-        
-        logits[i, c_idx] = float(pred)
-        labels[i, c_idx] = float(truth)
+    for p in all_preds:
+        i, c_idx = p["clip_idx"], p["class_idx"]
+        logits[i, c_idx] = float(p["pred"])
+        labels[i, c_idx] = float(p["label"])
 
-    metrics = compute_metrics(
-        logits = logits,
-        labels = labels,
-        threshold = 0.5
-    )
-    logger.info("Metrics computed successfully.")
-    logger.info(f"f1 macro: {metrics['f1_macro']}")
+    metrics = compute_metrics(logits=logits, labels=labels, threshold=0.5)
+    logger.info(f"Metrics computed successfully. F1 macro: {metrics['f1_macro']:.4f}")
     
     log_test_wandb(
         wandb_run,
