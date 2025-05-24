@@ -224,8 +224,8 @@ class LlavaNext(BaseModel):
             attention_mask=attention_mask,
             max_new_tokens=256,
             temperature=0.7,         
-            top_p=0.9,               
-            repetition_penalty=1.2   
+            top_p=0.9,
+            do_sample=True
         )
         
         # Decode the generated tokens
