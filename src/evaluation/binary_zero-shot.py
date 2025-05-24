@@ -114,8 +114,8 @@ def main():
             """            
         ]
         output = judge_pipe(prompts[class_idx],
-                            max_length=50, 
-                            do_sample=False,
+                            max_new_tokens=32, 
+                            do_sample=True,
                             eos_token_id=judge_tokenizer.eos_token_id)
         out = output[0]["generated_text"]
         answer = out.split('[/INST]')[-1].strip()

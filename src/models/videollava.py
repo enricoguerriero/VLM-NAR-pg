@@ -238,8 +238,8 @@ class VideoLlava(BaseModel):
             attention_mask=inputs["attention_mask"],
             max_new_tokens=128,
             temperature=0.7,
-            top_p=0.9,                 
-            repetition_penalty=1.2     
+            top_p=0.9,              
+            do_sample=True     
         )
 
         # Decode
