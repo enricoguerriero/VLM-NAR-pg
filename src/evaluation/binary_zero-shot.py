@@ -63,8 +63,7 @@ def main():
         model = judge_model,
         tokenizer = judge_tokenizer,
         task = "text-generation",
-        pad_token_id = judge_tokenizer.eos_token_id,
-        device = 0 if torch.cuda.is_available() else -1
+        pad_token_id = judge_tokenizer.eos_token_id
     )
     logger.info("Judge model loaded successfully.")
     logger.info("-" * 20)
@@ -114,17 +113,6 @@ def main():
     ]
     all_entries = []
     prompts = []
-    
-    # def judge_answer(answer, class_idx):
-        
-    #     output = judge_pipe(prompts[class_idx],
-    #                         max_new_tokens=32, 
-    #                         do_sample=True,
-    #                         eos_token_id=judge_tokenizer.eos_token_id)
-    #     out = output[0]["generated_text"]
-    #     answer = out.split('[/INST]')[-1].strip()
-    #     answer = answer.strip().splitlines()[-1].strip().lower()
-    #     return answer.startswith("yes"), answer
     
     for idx, clip in tqdm(enumerate(test_dataset), total=len(test_dataset), desc="Preparing prompts"):
         class_idx = clip["class_idx"]
