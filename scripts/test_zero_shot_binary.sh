@@ -2,8 +2,8 @@
 #SBATCH --gres=gpu:2
 #SBATCH --partition=gpu
 #SBATCH --time=48:00:00
-#SBATCH --job-name=test_from_tokens
-#SBATCH --output=outputs/test_from_tokens.out
+#SBATCH --job-name=test_0s_binary
+#SBATCH --output=outputs/test_0s_binary.out
 
 # Activate the user environment (uenv)
 uenv verbose cuda-12.2.0 cudnn-12.x-8.8.0
@@ -23,7 +23,7 @@ echo "Environment variables loaded"
 export HUGGINGFACE_HUB_TOKEN=$HUGGINGFACE_HUB_TOKEN
 
 export PYTHONPATH=./
-python src/evaluation/test_from_tokens.py \
+python src/evaluation/binary_zero-shot.py \
     --model_name "VideoLLaVA"
 
 echo "--- THE END ---"
