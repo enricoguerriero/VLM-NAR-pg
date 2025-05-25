@@ -60,8 +60,8 @@ def objective(trial: optuna.Trial) -> float:
     
     num_classes = 4 # hardcoded but for all models the following line works
     # num_classes = model.classifier[-1].out_features
-    backbone_hidden = model.backbone.config.text_config.hidden_size
-    model.classifier = nn.Sequential(
+    backbone_hidden = model_copy.backbone.config.text_config.hidden_size
+    model_copy.classifier = nn.Sequential(
         nn.Linear(backbone_hidden, hidden_dim),
         nn.ReLU(),
         nn.Dropout(dropout_rate),
@@ -70,7 +70,7 @@ def objective(trial: optuna.Trial) -> float:
     pos_weight, prior_prob = train_dataset.weight_computation()
     pos_weight = pos_weight.to(DEVICE)
     prior_prob = prior_prob.to(DEVICE)
-    model_copy.classifier.bias.data.copy_(torch.log(prior_prob / (1 - prior_prob)))  # 1 layer classifier
+    model_copy.classifier[-1].bias.data.copy_(torch.log(prior_prob / (1 - prior_prob)))
 
     criterion = model_copy.define_criterion(
         criterion_name='wbce',
