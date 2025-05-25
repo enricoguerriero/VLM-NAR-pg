@@ -127,7 +127,7 @@ def main():
     logger.info(f"Min lr: {config['min_lr']}")
     logger.info("-" * 20)
     
-    unfreezing = model.set_unfreezing_condition(config["unfreezing"])
+    unfreezing = model.set_freezing_condition(config["unfreezing"])
     logger.info(f"Unfreezing condition: {unfreezing}")
     logger.info(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     logger.info(f"Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
@@ -138,6 +138,10 @@ def main():
     logger.info(f"Prior probability: {prior_probability}")
     logger.info(f"Bias: {bias}")
     logger.info("-" * 20)
+    
+    threshold = config["threshold"]
+    if isinstance(threshold, list):
+        threshold = torch.tensor(threshold, dtype=torch.float32)
     
     try:
         model.classifier.bias.data.copy_(bias) # 1 layer classifier
@@ -170,7 +174,7 @@ def main():
         train_metrics = compute_metrics(
             logits = train_logits,
             labels = train_labels,
-            threshold = config["threshold"]
+            threshold = threshold
         )
         logger.debug(f"Train metrics: {train_metrics}")
         log_msg += f", Train f1: {train_metrics['f1_macro']:.4f}"
@@ -185,7 +189,7 @@ def main():
         val_metrics = compute_metrics(
             logits = val_logits,
             labels = val_labels,
-            threshold = config["threshold"]
+            threshold = threshold
         )
         logger.debug(f"Validation metrics: {val_metrics}")
         log_msg += f", Validation f1: {val_metrics['f1_macro']:.4f}"
