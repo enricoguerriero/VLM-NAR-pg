@@ -6,7 +6,8 @@ from src.utils import (
     set_global_seed,
     load_config,
     compute_metrics,
-    log_wandb
+    log_wandb,
+    collate_fn_tokens
 )
 from src.data import TokenDataset
 import os
@@ -69,6 +70,7 @@ def main():
         batch_size=config["token_batch_size"],
         shuffle=True,
         num_workers=config["num_workers"],
+        collate_fn=collate_fn_tokens
     )
     logger.info("Train dataloader loaded successfully.")
     val_dataloader = DataLoader(
@@ -76,6 +78,7 @@ def main():
         batch_size=config["token_batch_size"],
         shuffle=False,
         num_workers=config["num_workers"],
+        collate_fn=collate_fn_tokens
     )
     logger.info("Validation dataloader loaded successfully.")
     logger.info("-" * 20)
