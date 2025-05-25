@@ -51,13 +51,13 @@ def main():
     
     logger.info("Loading datasets...")
     train_dataset = FeatureDataset(
-        os.path.join(config["data_dir"], 
+        os.path.join(config["feature_folder"], 
                      model_name,
                      "train")
     )
     logger.info("Train dataset loaded successfully.")
     val_dataset = FeatureDataset(
-        os.path.join(config["data_dir"],
+        os.path.join(config["feature_folder"],
                      model_name,
                      "validation")
     )
