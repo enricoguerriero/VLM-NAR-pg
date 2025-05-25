@@ -96,12 +96,14 @@ def main():
     logger.info(f"Weight decay: {config['weight_decay']}")
     logger.info(f"Momentum: {config['momentum']}")
     
+    pos_weight, prior_probability = train_dataset.weight_computation()
+    
     criterion = model.define_criterion(
         criterion_name=config["criterion"],
-        pos_weight=train_dataset.pos_weight
+        pos_weight=pos_weight.to(model.device)
     )
     logger.info(f"Criterion {config['criterion']} defined.")
-    logger.info(f"Pos weight: {train_dataset.pos_weight}")
+    logger.info(f"Pos weight: {pos_weight}")
     
     scheduler = model.define_scheduler(
         scheduler_name = config["scheduler"],
@@ -127,7 +129,6 @@ def main():
     logger.info(f"Min lr: {config['min_lr']}")
     logger.info("-" * 20)
     
-    prior_probability = train_dataset.prior_probability.clamp_min(1e-6).clamp_max(1-1e-6)
     bias = torch.log(prior_probability / (1 - prior_probability))
     logger.info(f"Prior probability: {prior_probability}")
     logger.info(f"Bias: {bias}")
