@@ -127,7 +127,7 @@ def main():
     logger.info(f"Min lr: {config['min_lr']}")
     logger.info("-" * 20)
     
-    unfreezing = model.set_freezing_condition(config["unfreezing"])
+    unfreezing = model.set_freezing_condition(config["freezing_condition"])
     logger.info(f"Unfreezing condition: {unfreezing}")
     logger.info(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     logger.info(f"Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
