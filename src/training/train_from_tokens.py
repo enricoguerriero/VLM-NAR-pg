@@ -59,7 +59,7 @@ def main():
     val_dataset = TokenDataset(
         data_dir = os.path.join(config["token_folder"],
                                 model_name,
-                                "val")
+                                "validation")
     )
     logger.info("Validation dataset loaded successfully.")
     
