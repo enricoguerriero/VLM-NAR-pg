@@ -54,6 +54,10 @@ def compute_metrics(
     )
 
     metrics = {
+        "logits": logits,
+        "labels": labels,
+        "probs": probs,
+        "preds": preds,
         "TP": TP, "FP": FP, "FN": FN, "TN": TN,
         "accuracy":      acc_per_class,
         "precision":     p,
