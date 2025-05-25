@@ -70,13 +70,13 @@ def objective(trial: optuna.Trial) -> float:
     pos_weight, prior_prob = train_dataset.weight_computation()
     pos_weight = pos_weight.to(DEVICE)
     prior_prob = prior_prob.to(DEVICE)
-    model.classifier.bias.data.copy_(torch.log(prior_prob / (1 - prior_prob)))  # 1 layer classifier
+    model_copy.classifier.bias.data.copy_(torch.log(prior_prob / (1 - prior_prob)))  # 1 layer classifier
 
-    criterion = model.define_criterion(
+    criterion = model_copy.define_criterion(
         criterion_name='wbce',
         pos_weight=pos_weight
     )
-    optimizer = model.define_optimizer(
+    optimizer = model_copy.define_optimizer(
         optimizer_name=optimizer_name,
         learning_rate=learning_rate,
         weight_decay=weight_decay,
@@ -101,7 +101,7 @@ def objective(trial: optuna.Trial) -> float:
         cooldown = trial.suggest_int('cooldown', 0, 5)
         min_lr = trial.suggest_float('min_lr', 1e-6, 1e-2, log=True)
 
-    scheduler = model.define_scheduler(
+    scheduler = model_copy.define_scheduler(
         scheduler_name=scheduler_name,
         optimizer=optimizer,
         epochs=epochs,
