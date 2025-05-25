@@ -1,15 +1,18 @@
 frame_per_second: 8
 
 token_batch_size: 16
-batch_size: 128
+batch_size: 32
 optimizer: "adamw"
-learning_rate: 0.0001
-weight_decay: 0.0002
+learning_rate: 0.000006
+weight_decay: 0.00005
 criterion: "wbce"
-scheduler: "cosineannealinglr"
+scheduler: "reduceonplateau"
+cooldown: 1
+factor: 0.324
+min_lr: 0.00006
 patience: 5
-epochs: 15
-threshold: 0.5
+epochs: 8
+threshold: [0.351, 0.323, 0.43, 0.317]
 num_workers: 0
 freezing_condition: "lora"
 eta_min: 0.001
