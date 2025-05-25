@@ -51,13 +51,13 @@ def main():
     
     logger.info("Loading datasets...")
     train_dataset = TokenDataset(
-        data_dir = os.path.join(config["token_dir"],
+        data_dir = os.path.join(config["token_folder"],
                                 model_name,
                                 "train")
     )
     logger.info("Train dataset loaded successfully.")
     val_dataset = TokenDataset(
-        data_dir = os.path.join(config["token_dir"],
+        data_dir = os.path.join(config["token_folder"],
                                 model_name,
                                 "val")
     )
