@@ -19,6 +19,12 @@ class TokenDataset(Dataset):
         
         for f in self.files:
             data = torch.load(os.path.join(data_dir, f), weights_only=False)
+            if isinstance(data, dict):
+                label = data['labels']
+            elif hasattr(data, 'data') and 'labels' in data.data:
+                label = data.data['labels']
+            else:
+                raise KeyError(f"'labels' key not found in file {f}")
             label = data['labels']
             self.pos_counts += label.float()
         neg_counts = self._total_samples - self.pos_counts
