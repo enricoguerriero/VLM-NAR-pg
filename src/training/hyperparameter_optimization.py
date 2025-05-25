@@ -138,10 +138,7 @@ def objective(trial: optuna.Trial) -> float:
         train_loss, train_logits, train_labels = model_copy.train_classifier_epoch(
             train_loader,
             optimizer,
-            criterion,
-            scheduler,
-            epoch + 1,
-            epochs
+            criterion
         )
         log_msg = f"Train loss: {train_loss:.4f}"
         logger.debug(f"Train loss: {train_loss:.4f}")
