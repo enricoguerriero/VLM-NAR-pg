@@ -234,7 +234,7 @@ def main():
     logger.info("Training completed.")
     logger.info(f"Best validation loss: {best_val_loss:.4f}")
     model.load_state_dict(best_model_wts)
-    model.save_model()
+    model.save_model("_tokens")
     logger.info("Best model saved.")
     
     wandb_run.finish()
