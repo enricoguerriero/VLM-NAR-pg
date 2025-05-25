@@ -14,6 +14,7 @@ threshold: [0.457, 0.303, 0.388, 0.378]
 num_workers: 0
 freezing_condition: "lora"
 eta_min: 0.001
+gamma: 0.755
 
 
 system_message_0s: |
