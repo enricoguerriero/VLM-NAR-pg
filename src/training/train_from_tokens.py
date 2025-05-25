@@ -215,6 +215,11 @@ def main():
         )
         logger.debug("Logged to wandb.")
         
+        # Clear CUDA cache to free up memory
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+        logger.debug("CUDA cache cleared.")
+        
         model.save_checkpoint(
             epoch,
             optimizer,

@@ -14,7 +14,9 @@ source activate NewbornEnv
 
 echo "virtual environment activated"
 
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
+
 python src/training/train_from_tokens.py \
     --model_name "VideoLLaVA"
 
