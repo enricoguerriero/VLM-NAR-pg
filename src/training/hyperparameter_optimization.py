@@ -249,11 +249,14 @@ if __name__ == "__main__":
     # Optimize the objective function
     study.optimize(objective, n_trials=100, callbacks=[wandb_callback])
     
-    # Log results
-    log_wandb(wandb_run, study)
+    wandb_run.log({
+        "best_trial": study.best_trial.number,
+        "best_value": study.best_value,
+        "best_params": study.best_params
+    })
     
     # Visualize results
-    wandb.log({
+    wandb_run.log({
         "optimization_history": plot_optimization_history(study),
         "param_importances": plot_param_importances(study),
         "parallel_coordinate": plot_parallel_coordinate(study),
