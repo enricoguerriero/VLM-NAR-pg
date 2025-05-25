@@ -199,10 +199,17 @@ if __name__ == "__main__":
         default=None,
         help="Path to the model checkpoint.",
     )
+    parser.add_argument(
+        "--n_trials",
+        type=int,
+        default=None,
+        help="Number of trials for hyperparameter optimization.",
+    )
     
     args = parser.parse_args()
     model_name = args.model_name
     checkpoint = args.checkpoint
+    n_trials = args.n_trials
     
     logger = setup_logging(model_name, "hyperparameter_optimization")
     config = load_config(model_name)
@@ -245,10 +252,12 @@ if __name__ == "__main__":
         metric_name="val_f1_macro",
         wandb_kwargs={"project": PROJECT_NAME, "reinit": True}
     )
-    
-    # Optimize the objective function
-    study.optimize(objective, n_trials=100, callbacks=[wandb_callback])
-    
+        
+    if n_trials and n_trials > 0:
+        study.optimize(objective, n_trials=n_trials, callbacks=[wandb_callback])
+    else:
+        logger.info(f"n_trials={n_trials}; skipping optimization, using existing {len(study.trials)} trials")
+
     summary_run = wandb.init(
         project=PROJECT_NAME,
         name=f"{model_name}_optuna_summary",
