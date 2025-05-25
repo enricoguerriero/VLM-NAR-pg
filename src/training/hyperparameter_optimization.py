@@ -33,7 +33,12 @@ PROJECT_NAME = "Newborn_Activity_Recognition_optimization"
 
 def objective(trial: optuna.Trial) -> float:
     
+    set_global_seed()
+    
     logger.info(f"Trial number: {trial.number}")
+    model_copy = copy.deepcopy(model).to(DEVICE)
+    for param in model_copy.backbone.parameters():
+        param.requires_grad = False
     
     optimizer_name = trial.suggest_categorical('optimizer_name', ['adam', 'sgd', 'adamw'])
     learning_rate = trial.suggest_float('learning_rate', 1e-6, 1e-2, log=True)
@@ -49,7 +54,7 @@ def objective(trial: optuna.Trial) -> float:
         trial.suggest_float('threshold_2', 0.3, 0.7),
         trial.suggest_float('threshold_3', 0.3, 0.7),
         trial.suggest_float('threshold_4', 0.3, 0.7)
-    ])
+    ]).to(DEVICE)
     hidden_dim = trial.suggest_categorical('hidden_dim', [256, 512, 1024])
     patience = 0 # already optimizing epochs
     
@@ -130,7 +135,7 @@ def objective(trial: optuna.Trial) -> float:
         logger.debug(f"Epoch {epoch + 1}/{epochs}")
         
         logger.debug("Training...")
-        train_loss, train_logits, train_labels = model.train_classifier_epoch(
+        train_loss, train_logits, train_labels = model_copy.train_classifier_epoch(
             train_loader,
             optimizer,
             criterion,
@@ -146,7 +151,7 @@ def objective(trial: optuna.Trial) -> float:
         log_msg += f", Train f1: {train_metrics['f1_macro']:.4f}"
         
         logger.debug("Validating...")
-        val_loss, val_logits, val_labels = model.validate_classifier_epoch(
+        val_loss, val_logits, val_labels = model_copy.eval_classifier_epoch(
             val_loader,
             criterion
         )
@@ -162,14 +167,14 @@ def objective(trial: optuna.Trial) -> float:
         except AttributeError:
             scheduler.step()
         epochs_iter.set_postfix_str(log_msg)
-        log_wandb(
-            wandb_run,
-            epoch + 1,
-            train_loss,
-            val_loss,
-            train_metrics,
-            val_metrics
-        )
+        # log_wandb(
+        #     wandb_run,
+        #     epoch + 1,
+        #     train_loss,
+        #     val_loss,
+        #     train_metrics,
+        #     val_metrics
+        # )
         logger.debug("Logged to wandb.")
         
         # 1. Report intermediate objective
@@ -202,7 +207,6 @@ if __name__ == "__main__":
     model_name = args.model_name
     checkpoint = args.checkpoint
     
-    set_global_seed()
     logger = setup_logging(model_name, "hyperparameter_optimization")
     config = load_config(model_name)
     wandb_run = setup_wandb(model_name, config)
@@ -227,8 +231,9 @@ if __name__ == "__main__":
     model = load_model(model_name, checkpoint)
     
     STUDY_NAME = f"newborn_activity_recognition_{model_name}"
-    os.makedirs(os.path.dirname(f"data/db/{model_name}"), exist_ok=True)
-    DB_PATH = f"sqlite:///data/db/{model_name}/optuna_newborn.db"  # Path to persistent storage
+    db_dir = os.path.join("data", "db", model_name)
+    os.makedirs(db_dir, exist_ok=True)
+    DB_PATH = f"sqlite:///{os.path.join(db_dir, 'optuna_newborn.db')}"
     
     study = optuna.create_study(
         study_name=STUDY_NAME,
