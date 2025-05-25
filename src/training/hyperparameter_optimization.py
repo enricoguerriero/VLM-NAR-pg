@@ -249,19 +249,31 @@ if __name__ == "__main__":
     # Optimize the objective function
     study.optimize(objective, n_trials=100, callbacks=[wandb_callback])
     
+    summary_run = wandb.init(
+        project=PROJECT_NAME,
+        name=f"{model_name}_optuna_summary",
+        reinit=True
+    )
+    
+    summary_run.log({
+    "best_trial": study.best_trial.number,
+    "best_value": study.best_value,
+    "best_params": study.best_params
+    })
+    
     wandb_run.log({
         "best_trial": study.best_trial.number,
         "best_value": study.best_value,
         "best_params": study.best_params
     })
     
-    # Visualize results
-    wandb_run.log({
+    summary_run.log({
         "optimization_history": plot_optimization_history(study),
-        "param_importances": plot_param_importances(study),
-        "parallel_coordinate": plot_parallel_coordinate(study),
-        "slice_plot": plot_slice(study),
-        "contour_plot": plot_contour(study)
+        "param_importances":    plot_param_importances(study),
+        "parallel_coordinate":  plot_parallel_coordinate(study),
+        "slice_plot":           plot_slice(study),
+        "contour_plot":         plot_contour(study),
     })
+    summary_run.finish()
     
     logger.info("Hyperparameter optimization completed.")
