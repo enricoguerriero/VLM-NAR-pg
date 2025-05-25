@@ -62,7 +62,7 @@ def objective(trial: optuna.Trial) -> float:
     # num_classes = model.classifier[-1].out_features
     backbone_hidden = model_copy.backbone.config.text_config.hidden_size
     model_copy.classifier = nn.Sequential(
-        nn.Linear(backbone_hidden, hidden_dim),
+        nn.Linear(backbone_hidden*2, hidden_dim),
         nn.ReLU(),
         nn.Dropout(dropout_rate),
         nn.Linear(hidden_dim, num_classes)
