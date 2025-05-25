@@ -9,7 +9,7 @@ criterion: "wbce"
 scheduler: "steplr"
 step_size: 2
 patience: 3
-epochs: 5
+epochs: 2
 threshold: [0.457, 0.303, 0.388, 0.378]
 num_workers: 0
 freezing_condition: "lora"
