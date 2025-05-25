@@ -270,7 +270,7 @@ if __name__ == "__main__":
     "best_params": study.best_params
     })
     
-    wandb_run.log({
+    summary_run.log({
         "best_trial": study.best_trial.number,
         "best_value": study.best_value,
         "best_params": study.best_params
