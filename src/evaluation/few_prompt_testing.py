@@ -89,7 +89,7 @@ def main():
         pad_token_id=judge_tokenizer.eos_token_id,
         return_full_text=False,
         clean_up_tokenization_spaces=True,
-        device_map="auto"
+        # device_map="auto"
     )
 
     # Load dataset and sample indices
@@ -123,11 +123,11 @@ def main():
         # Run judge
         out = judge_pipe(
             prompt,
-            max_new_tokens=1,
+            max_new_tokens=15,
             do_sample=False,
-            eos_token_id=judge_tokenizer.eos_token_id,
-            pad_token_id=judge_tokenizer.eos_token_id,
-            stop=["\n"]
+            # eos_token_id=judge_tokenizer.eos_token_id,
+            # pad_token_id=judge_tokenizer.eos_token_id,
+            # stop=["\n"]
         )[0]["generated_text"].strip().lower().split()[0]
         pred = (out == "yes")
 
