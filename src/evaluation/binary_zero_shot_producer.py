@@ -33,8 +33,8 @@ def collate_fn(batch):
     attention_mask = pad_sequence(masks, batch_first=True, padding_value=0)
 
     pixel_values_videos = torch.cat([b["pixel_values_videos"] for b in batch], dim=0)
-    class_idx = torch.cat([b["class_idx"] for b in batch], dim=0)
-    label     = torch.cat([b["label"]     for b in batch], dim=0)
+    class_idx = torch.stack([b["class_idx"] for b in batch], dim=0)
+    label     = torch.stack([b["label"]     for b in batch], dim=0)
 
     return {
         "input_ids": input_ids,
