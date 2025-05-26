@@ -16,6 +16,6 @@ echo "virtual environment activated"
 export PYTHONPATH=./
 python src/evaluation/binary_zero_shot_metrics.py \
     --model_name "VideoLLaVA" \
-    --prediction_file "VideoLLaVA_stream_binary_results.ndjson" \
+    --predictions_file "VideoLLaVA_stream_binary_results.ndjson" \
 
 echo "--- THE END ---"
