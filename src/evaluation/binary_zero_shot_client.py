@@ -101,7 +101,7 @@ def main():
         entry = json.loads(line)
         prompt = PROMPTS[entry["class_idx"]].replace("{answer}", entry["caption"])
         # run judge
-        out = judge_pipe([prompt],
+        out = judge_pipe(prompt,
                          max_new_tokens=32,
                          do_sample=True,
                          batch_size=1)[0]["generated_text"]
