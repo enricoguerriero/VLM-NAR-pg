@@ -127,7 +127,7 @@ def main():
 
         all_entries.append({
             "clip_idx": idx,
-            "class_idx": class_idx,
+            "class_idx": int(class_idx.item()),
             "label": label.tolist(),
             "caption": caption
         })
