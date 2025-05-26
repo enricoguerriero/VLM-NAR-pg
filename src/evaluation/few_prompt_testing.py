@@ -115,6 +115,8 @@ def main():
                 max_new_tokens=128,
                 do_sample=False
             )[0]
+        
+        print(f"[{idx}] Caption: {repr(caption)}")
 
         # Select and fill prompt
         class_idx = int(sample["class_idx"].item())
