@@ -105,16 +105,6 @@ def log_test_wandb(
             arr = arr.cpu().numpy()
         return arr.reshape(-1, len(class_names))[:, i].tolist()
     
-    if "labels" in test_metrics:
-        labels = test_metrics["labels"]
-        # tensor or ndarray → list
-        if hasattr(labels, "tolist"):
-            test_metrics["labels"] = labels.tolist()
-        # single float/int → wrap in list
-        elif isinstance(labels, (float, int)):
-            test_metrics["labels"] = [labels]
-        # otherwise assume it's already list-like
-    
     for i, class_name in enumerate(class_names):
         y_true = _get_flat(test_metrics["labels"], i)
         y_pred = test_metrics["preds"][:, i].tolist()
