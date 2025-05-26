@@ -66,6 +66,8 @@ def main():
         c = entry["class_idx"]
         logits[i, c] = float(entry["pred"])
         labels[i, c] = float(entry["label"])
+        print(f"pred: {entry['pred']}", flush=True)
+        print(f"label: {entry['label']}", flush=True)
 
     # ——— Compute & log metrics ———
     metrics = compute_metrics(logits=logits, labels=labels, threshold=0.5)
