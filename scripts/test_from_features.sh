@@ -16,5 +16,6 @@ echo "virtual environment activated"
 export PYTHONPATH=./
 python src/evaluation/evaluate_from_features.py \
     --model_name "VideoLLaVA"
+    --checkpoint "models/VideoLLaVA_features_combined.pth" \
 
 echo "--- THE END ---"
