@@ -122,7 +122,7 @@ def main():
 
         # step scheduler on training loss (or switch to train_metrics if desired)
         try:
-            scheduler.step(train_loss)
+            scheduler.step(train_metrics['f1_macro'])
         except TypeError:
             scheduler.step()
 

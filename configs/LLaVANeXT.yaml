@@ -11,6 +11,7 @@ cooldown: 1
 factor: 0.324
 min_lr: 0.00006
 mode: "min"
+scheduler_patience: 2
 patience: 5
 epochs: 8
 threshold: [0.351, 0.323, 0.43, 0.317]
