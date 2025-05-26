@@ -94,7 +94,7 @@ def main():
 
     # Load dataset and sample indices
     ds = BinaryTokenDataset(
-        data_dir=os.path.join(os.getenv("TOKEN_FOLDER"), MODEL_CAPTION, "binary"),
+        data_dir=os.path.join("data/tokens", MODEL_CAPTION, "binary"),
         num_classes=4
     )
     all_idxs = list(range(len(ds)))
