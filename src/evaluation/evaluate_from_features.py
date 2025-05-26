@@ -72,7 +72,7 @@ def main():
         pos_weight=pos_weight
     )
     
-    test_loss, test_logits, test_labels = model.eval_epoch(
+    test_loss, test_logits, test_labels = model.eval_classifier_epoch(
         test_dataloader,
         criterion
     )
