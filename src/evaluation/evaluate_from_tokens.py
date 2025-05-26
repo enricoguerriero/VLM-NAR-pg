@@ -6,7 +6,8 @@ from src.utils import (
     set_global_seed,
     load_config,
     compute_metrics,
-    log_test_wandb
+    log_test_wandb,
+    collate_fn_tokens
 )
 from src.data import TokenDataset
 import os
@@ -58,9 +59,10 @@ def main():
     logger.info("Creating dataloaders...")
     test_dataloader = DataLoader(
         test_dataset,
-        batch_size=config["batch_size"],
+        batch_size=config["tokens_batch_size"],
         shuffle=False,
         num_workers=config["num_workers"],
+        collate_fn=collate_fn_tokens
     )
     logger.info("Dataloaders created successfully.")
     logger.info("-" * 20)
@@ -92,6 +94,7 @@ def main():
         test_metrics
     )
     logger.info("Metrics logged to wandb successfully.")
+    wandb_run.finish()
     logger.info("-" * 20)
     logger.info(f"Evaluation of {model_name} completed successfully, bye bye!")
     logger.info("-" * 20)
