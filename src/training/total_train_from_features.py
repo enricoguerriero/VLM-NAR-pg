@@ -148,8 +148,9 @@ def main():
             best_wts = {k: v.cpu() for k, v in model.state_dict().items()}
 
         # clear cache & checkpoint
-        torch.cuda.empty_cache()
-        torch.cuda.ipc_collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
         model.save_checkpoint(epoch, optimizer, scheduler)
 
     # ─── Finalize ───────────────────────────────────────────────────────────────

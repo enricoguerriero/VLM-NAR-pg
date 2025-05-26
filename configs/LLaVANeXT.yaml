@@ -10,6 +10,7 @@ scheduler: "reduceonplateau"
 cooldown: 1
 factor: 0.324
 min_lr: 0.00006
+mode: "min"
 patience: 5
 epochs: 8
 threshold: [0.351, 0.323, 0.43, 0.317]
