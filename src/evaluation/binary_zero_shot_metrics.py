@@ -73,7 +73,7 @@ def main():
     metrics = compute_metrics(logits=logits, labels=labels, threshold=0.5)
     logger.info(f"Metrics computed successfully. F1 macro: {metrics['f1_macro']:.4f}")
 
-    log_test_wandb(wandb_run, 0, metrics)
+    log_test_wandb(wandb_run, metrics, 0)
     wandb_run.finish()
     logger.info("✅ Metrics logged to W&B. All done!")
 
