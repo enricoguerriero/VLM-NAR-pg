@@ -114,7 +114,7 @@ def main():
                 inputs=inputs,
                 max_new_tokens=128,
                 do_sample=False
-            )[0]
+            )
         
         print(f"[{idx}] Caption: {repr(caption)}")
 
