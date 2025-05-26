@@ -86,6 +86,10 @@ def main():
     logger.info("Metrics computed successfully.")
     logger.info(f"Test Loss: {test_loss}, test f1: {test_metrics['f1_macro']}")
     
+    print(f"[DEBUG] test_metrics type: {type(test_metrics)}")
+    print(f"[DEBUG] test_metrics keys: {list(test_metrics.keys()) if isinstance(test_metrics, dict) else test_metrics}")
+
+    
     labels = test_metrics.get("labels", None)
     if labels is not None:
         if hasattr(labels, "tolist"):
