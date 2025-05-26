@@ -12,14 +12,21 @@ class VideoLlava(BaseModel):
         
         # Load the processor and model
         self.processor = VideoLlavaProcessor.from_pretrained(base_model_id)
-        if checkpoint_path:
-            self.backbone = VideoLlavaForConditionalGeneration.from_pretrained(
-                checkpoint_path,
-                torch_dtype=torch.float16
-            ).to(self.device)
-        else:
+        if checkpoint_path and checkpoint_path.endswith(".pth"):
+            # Load base model
             self.backbone = VideoLlavaForConditionalGeneration.from_pretrained(
                 base_model_id,
+                torch_dtype=torch.float16
+            ).to(self.device)
+            
+            # Load weights manually
+            state_dict = torch.load(checkpoint_path, map_location=self.device)
+            self.backbone.load_state_dict(state_dict, strict=False)
+
+        else:
+            # Normal pretrained Hugging Face logic
+            self.backbone = VideoLlavaForConditionalGeneration.from_pretrained(
+                checkpoint_path if checkpoint_path else base_model_id,
                 torch_dtype=torch.float16
             ).to(self.device)
 
