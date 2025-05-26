@@ -16,7 +16,7 @@ echo "virtual environment activated"
 
 export PYTHONPATH=./
 python src/data/build_resus_dataset.py \
-    --dataset_path "data/clips/test" \
-    --output_path "data/clips/test" \
+    --root "data/clips/test" \
+    --out "data/clips/test" \
 
 echo "--- THE END ---"
