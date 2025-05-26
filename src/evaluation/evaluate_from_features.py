@@ -99,8 +99,8 @@ def main():
     
     log_test_wandb(
         wandb_run,
-        test_loss,
-        test_metrics
+        test_metrics,
+        test_loss
     )
     logger.info("Metrics logged to wandb successfully.")
     wandb_run.finish()
