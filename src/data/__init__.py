@@ -2,3 +2,5 @@ from .feature_dataset import FeatureDataset
 from .token_dataset import TokenDataset
 from .clip_dataset import ClipDataset
 from .token_dataset_per_class import BinaryTokenDataset
+from .clip_dataset_per_class import BinaryClipDataset
+from .processed_clip_dataset_per_class import VLMBinaryClipDataset

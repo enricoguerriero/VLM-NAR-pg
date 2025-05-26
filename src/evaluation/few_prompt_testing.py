@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 """
-few_shot_evaluation.py
+few_shot_evaluation_vlm.py
 
-Single-script to test original judge prompts on sampled clips.
+Single-script to test original judge prompts on sampled clips,
+using our VLMBinaryClipDataset (one binary example per clip/class).
 """
 import os
 import random
 import json
 from dotenv import load_dotenv
 from huggingface_hub import login
+
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, TextGenerationPipeline
+
 from src.utils import set_global_seed, load_model
-from src.data import BinaryTokenDataset
+from src.data import VLMBinaryClipDataset   # <-- our new dataset
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 MODEL_CAPTION = "VideoLLaVA"
@@ -91,6 +94,15 @@ PROMPTS = [
     """
 ]
 
+SYSTEM_MESSAGE = "You are assisting in a newborn resuscitation simulation. The video is recorded from above a resuscitation table. A mannequin representing a newborn baby may or may not be present. Based on the visual evidence, respond to the following questions. Be explicit and unambiguous."
+
+CAPTION_PROMPTS = [
+    "Describe the scene in the clip and give it a caption. You should see the table. On the table, there may be either a real baby / mannequin or nothing.",
+    "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker holding a large ventilation mask over the mannequin's face, covering both mouth and nose? This action supports breathing and is distinct from tube insertion. Be explicit. If there is not a baby / mannequin visible, no treatment is being performed.",
+    "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker performing up-and-down stimulation on the mannequin's back, buttocks, or trunk? These are small, quick movements. Be clear and specific. If there is not a baby / mannequin visible, no treatment is being performed.",
+    "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker inserting a small tube into the mouth or nose of the mannequin to provide suction? This cannot occur at the same time as mask ventilation. Be explicit. If there is not a baby / mannequin visible, no treatment is being performed."
+]
+
 def main():
     # env + reproducibility
     load_dotenv()
@@ -117,40 +129,53 @@ def main():
         pad_token_id=judge_tokenizer.eos_token_id,
         return_full_text=False,
         clean_up_tokenization_spaces=True,
-        # device_map="auto"
     )
 
-    # Load dataset and sample indices
-    ds = BinaryTokenDataset(
-        data_dir=os.path.join("data/tokens", MODEL_CAPTION, "binary"),
-        num_classes=4
+    processor = caption_model.processor
+
+    # Build the VLMBinaryClipDataset
+    ds = VLMBinaryClipDataset(
+        video_folder=os.path.join("data", "videos"),
+        annotation_folder=os.path.join("data", "annotations"),
+        clip_length=5,
+        overlapping=0.5,
+        frame_per_second=2,
+        num_classes=4,
+        system_message=SYSTEM_MESSAGE,   
+        prompts=CAPTION_PROMPTS,
+        processor=processor,
+        transform=None
     )
+
+    # Sample some indices
     all_idxs = list(range(len(ds)))
     sampled = random.Random(SEED).sample(all_idxs, k=min(NUM_SAMPLES, len(ds)))
 
     results = []
     for idx in sampled:
         sample = ds[idx]
-        
-        true_label = sample["label"].tolist()
-        
-        # Generate caption
+
+        true_label = sample["label"].item()
+        class_idx  = sample["class_idx"].item()
+
+        # Prepare inputs for caption model exactly as before
         inputs = {
-            "input_ids": sample["input_ids"].to(device),
-            "attention_mask": sample["attention_mask"].to(device),
-            "pixel_values_videos": sample["pixel_values_videos"].to(device)
+            "input_ids":        sample["input_ids"].unsqueeze(0).to(device),
+            "attention_mask":   sample["attention_mask"].unsqueeze(0).to(device),
+            "pixel_values_videos": sample["pixel_values_videos"].unsqueeze(0).to(device)
         }
+
+        # Generate caption
         with torch.no_grad():
             caption = caption_model.generate_answer(
                 inputs=inputs,
                 max_new_tokens=128,
                 do_sample=False
             )
-        
+
         print(f"[{idx}] Caption: {repr(caption)}")
 
-        # Select and fill prompt
-        class_idx = int(sample["class_idx"].item())
+        # Fill in the judge prompt
         prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
 
         # Run judge
@@ -158,18 +183,15 @@ def main():
             prompt,
             max_new_tokens=15,
             do_sample=False,
-            # eos_token_id=judge_tokenizer.eos_token_id,
-            # pad_token_id=judge_tokenizer.eos_token_id,
-            # stop=["\n"]
         )[0]["generated_text"].strip().lower()
         pred = out_raw.startswith("yes")
 
         result = {
-            "clip_idx": idx,
-            "class_idx": class_idx,
-            "caption": caption,
+            "clip_idx":   idx,
+            "class_idx":  class_idx,
+            "caption":    caption,
             "true_label": true_label,
-            "judge_raw": out_raw,
+            "judge_raw":  out_raw,
             "prediction": pred
         }
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -179,7 +201,7 @@ def main():
     with open("few_shot_results.json", "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
 
-    print(f"Evaluated {len(results)} clips. Saved to few_shot_results.json")
+    print(f"Evaluated {len(results)} examples. Saved to few_shot_results.json")
 
 if __name__ == "__main__":
     main()
