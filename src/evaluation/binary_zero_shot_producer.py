@@ -21,27 +21,27 @@ from src.data import BinaryTokenDataset
 
 def collate_fn(batch):
     """
-    Pads input_ids and attention_mask to the max length in the batch,
-    and stacks class_idx/label.
+    Pads text and stacks video tensors for a VLM-style model.
+    Assumes keys: input_ids, attention_mask, pixel_values_videos, class_idx, label
     """
-    # assume each b has keys: input_ids (1, L), attention_mask (1, L), class_idx, label
-    # remove the leading singleton dim on tokens:
+    from torch.nn.utils.rnn import pad_sequence
+
     seqs = [b["input_ids"].squeeze(0) for b in batch]
     masks = [b["attention_mask"].squeeze(0) for b in batch]
 
-    # pad to the longest sequence in this batch
-    input_ids     = pad_sequence(seqs,  batch_first=True, padding_value=0)
-    attention_mask= pad_sequence(masks, batch_first=True, padding_value=0)
+    input_ids = pad_sequence(seqs, batch_first=True, padding_value=0)
+    attention_mask = pad_sequence(masks, batch_first=True, padding_value=0)
 
-    # stack the scalar fields
+    pixel_values_videos = torch.stack([b["pixel_values_videos"] for b in batch], dim=0)
     class_idx = torch.stack([b["class_idx"] for b in batch], dim=0)
     label     = torch.stack([b["label"]     for b in batch], dim=0)
 
     return {
-        "input_ids":      input_ids,
+        "input_ids": input_ids,
         "attention_mask": attention_mask,
-        "class_idx":      class_idx,
-        "label":          label,
+        "pixel_values_videos": pixel_values_videos,
+        "class_idx": class_idx,
+        "label": label,
     }
 
 def main():
@@ -90,7 +90,7 @@ def main():
         for batch in tqdm(loader, desc="Generating batches"):
             # move inputs to device
             inputs = {k: v.to(device) for k, v in batch.items()
-                      if k in ["input_ids", "attention_mask"]}
+                      if k in ["input_ids", "attention_mask", "pixel_values_videos"]}
             with torch.no_grad():
                 captions = model.generate_answer(
                     inputs=inputs,
