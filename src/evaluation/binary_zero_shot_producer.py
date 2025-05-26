@@ -35,6 +35,12 @@ def collate_fn(batch):
     pixel_values_videos = torch.cat([b["pixel_values_videos"] for b in batch], dim=0)
     class_idx = torch.stack([b["class_idx"] for b in batch], dim=0)
     label     = torch.stack([b["label"]     for b in batch], dim=0)
+    
+    print(f"Batch size: {len(batch)}, Input shape: {input_ids.shape}, "
+          f"Attention mask shape: {attention_mask.shape}, "
+          f"Pixel values shape: {pixel_values_videos.shape}, "
+          f"Class indices shape: {class_idx.shape}, "
+          f"Labels shape: {label.shape}")
 
     return {
         "input_ids": input_ids,
