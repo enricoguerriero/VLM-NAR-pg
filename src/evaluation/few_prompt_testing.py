@@ -103,6 +103,9 @@ def main():
     results = []
     for idx in sampled:
         sample = ds[idx]
+        
+        true_label = sample["label"].tolist()
+        
         # Generate caption
         inputs = {
             "input_ids": sample["input_ids"].to(device),
@@ -123,21 +126,22 @@ def main():
         prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
 
         # Run judge
-        out = judge_pipe(
+        out_raw = judge_pipe(
             prompt,
             max_new_tokens=15,
             do_sample=False,
             # eos_token_id=judge_tokenizer.eos_token_id,
             # pad_token_id=judge_tokenizer.eos_token_id,
             # stop=["\n"]
-        )[0]["generated_text"].strip().lower().split()[0]
-        pred = (out == "yes")
+        )[0]["generated_text"].strip().lower().split()
+        pred = out_raw.startswith("yes")
 
         result = {
             "clip_idx": idx,
             "class_idx": class_idx,
             "caption": caption,
-            "judge_raw": out,
+            "true_label": true_label,
+            "judge_raw": out_raw,
             "prediction": pred
         }
         print(json.dumps(result, ensure_ascii=False, indent=2))
