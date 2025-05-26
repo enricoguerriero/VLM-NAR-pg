@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 #SBATCH --time=48:00:00
 #SBATCH --job-name=test_from_tokens
@@ -16,6 +16,8 @@ echo "virtual environment activated"
 
 export PYTHONPATH=./
 python src/evaluation/test_from_tokens.py \
-    --model_name "VideoLLaVA"
+    --model_name "VideoLLaVA" \
+    --checkpoint "models/VideoLLaVA_tokens_combined.pth" 
+
 
 echo "--- THE END ---"
