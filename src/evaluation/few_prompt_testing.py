@@ -15,7 +15,7 @@ from src.utils import set_global_seed, load_model
 from src.data import BinaryTokenDataset
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-MODEL_CAPTION = "VideoLLaVA"
+MODEL_CAPTION = "LLaVANeXT"
 MODEL_JUDGE   = "mistralai/Mistral-7B-Instruct-v0.1"
 NUM_SAMPLES   = 40
 SEED          = 42
