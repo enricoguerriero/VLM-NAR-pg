@@ -47,6 +47,11 @@ def main():
     with open(args.predictions_file, "r", encoding="utf-8") as f:
         for line in f:
             entries.append(json.loads(line))
+            
+    max_index = max(entry["clip_idx"] for entry in entries) + 1
+    num_classes = 4
+    logits = torch.zeros(max_index, num_classes)
+    labels = torch.zeros(max_index, num_classes)
     
     for entry in entries:
         i = entry["clip_idx"]
@@ -55,11 +60,6 @@ def main():
             print(f"⚠️ Warning: Invalid index i={i}, c={c}")
         logits[i, c] = float(entry["pred"])
         labels[i, c] = float(entry["label"])
-
-    total = len(entries)
-    num_classes = 4
-    logits = torch.zeros(total, num_classes)
-    labels = torch.zeros(total, num_classes)
 
     for entry in entries:
         i = entry["clip_idx"]
