@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --partition=cpu64
 #SBATCH --time=48:00:00
-#SBATCH --job-name=producer_test_0s_binary
-#SBATCH --output=outputs/producer_test_0s_binary.out
+#SBATCH --job-name=metrics_test_0s_binary
+#SBATCH --output=outputs/metrics_test_0s_binary.out
 
 # Activate the user environment (uenv)
 uenv verbose cuda-12.2.0 cudnn-12.x-8.8.0
