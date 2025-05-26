@@ -98,3 +98,6 @@ def main():
     logger.info("-" * 20)
     logger.info(f"Evaluation of {model_name} completed successfully, bye bye!")
     logger.info("-" * 20)
+    
+if __name__ == "__main__":
+    main()

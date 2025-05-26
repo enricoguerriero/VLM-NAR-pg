@@ -11,9 +11,6 @@ from src.utils import (
 from src.data import FeatureDataset
 import os
 from torch.utils.data import DataLoader
-import torch
-from tqdm import tqdm
-import copy
 
 def main():
     
@@ -41,7 +38,7 @@ def main():
     wandb_run = setup_wandb(model_name, config)
     
     logger.info("-" * 20)
-    logger.info(f"Starting training for {model_name} from features")
+    logger.info(f"Starting evaluation for {model_name} from features")
     logger.info(f"Checkpoint: {checkpoint}")
     logger.info("-" * 20)
     
@@ -68,10 +65,11 @@ def main():
     logger.info("-" * 20)
     
     logger.info(f"Starting evaluation of {model_name}...")
+    pos_weight, _ = test_dataset.weight_computation()
     
     criterion = model.define_criterion(
         criterion_name = config["criterion"],
-        pos_weight=test_dataset.pos_weight
+        pos_weight=pos_weight
     )
     
     test_loss, test_logits, test_labels = model.eval_epoch(
@@ -94,6 +92,10 @@ def main():
         test_metrics
     )
     logger.info("Metrics logged to wandb successfully.")
+    wandb_run.finish()
     logger.info("-" * 20)
     logger.info(f"Evaluation of {model_name} completed successfully, bye bye!")
     logger.info("-" * 20)
+    
+if __name__ == "__main__":
+    main()
