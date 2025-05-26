@@ -133,7 +133,7 @@ def main():
             # eos_token_id=judge_tokenizer.eos_token_id,
             # pad_token_id=judge_tokenizer.eos_token_id,
             # stop=["\n"]
-        )[0]["generated_text"].strip().lower().split()
+        )[0]["generated_text"].strip().lower()
         pred = out_raw.startswith("yes")
 
         result = {
