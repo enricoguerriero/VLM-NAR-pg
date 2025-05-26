@@ -86,6 +86,13 @@ def main():
     logger.info("Metrics computed successfully.")
     logger.info(f"Test Loss: {test_loss}, test f1: {test_metrics['f1_macro']}")
     
+    labels = test_metrics.get("labels", None)
+    if labels is not None:
+        if hasattr(labels, "tolist"):
+            test_metrics["labels"] = labels.tolist()
+        elif isinstance(labels, (float, int)):
+            test_metrics["labels"] = [labels]
+    
     log_test_wandb(
         wandb_run,
         test_loss,

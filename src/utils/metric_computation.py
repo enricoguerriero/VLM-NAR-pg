@@ -55,7 +55,7 @@ def compute_metrics(
 
     metrics = {
         "logits": logits,
-        "labels": labels.cpu().numpy(),
+        "labels": labels,
         "probs": probs,
         "preds": preds,
         "TP": TP, "FP": FP, "FN": FN, "TN": TN,
