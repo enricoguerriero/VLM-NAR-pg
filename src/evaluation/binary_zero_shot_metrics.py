@@ -47,6 +47,14 @@ def main():
     with open(args.predictions_file, "r", encoding="utf-8") as f:
         for line in f:
             entries.append(json.loads(line))
+    
+    for entry in entries:
+        i = entry["clip_idx"]
+        c = entry["class_idx"]
+        if i >= logits.shape[0] or c >= num_classes:
+            print(f"⚠️ Warning: Invalid index i={i}, c={c}")
+        logits[i, c] = float(entry["pred"])
+        labels[i, c] = float(entry["label"])
 
     total = len(entries)
     num_classes = 4
