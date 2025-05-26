@@ -15,7 +15,7 @@ source activate NewbornEnv
 echo "virtual environment activated"
 
 export PYTHONPATH=./
-python src/evaluation/few_shot_testing.py 
+python src/evaluation/few_prompt_testing.py 
 
 
 echo "--- THE END ---"
