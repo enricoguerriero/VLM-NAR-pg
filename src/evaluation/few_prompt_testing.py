@@ -104,7 +104,7 @@ def main():
     # env + reproducibility
     load_dotenv()
     login(os.getenv("HUGGINGFACE_TOKEN"))
-    set_global_seed(SEED)
+    # set_global_seed(SEED)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
