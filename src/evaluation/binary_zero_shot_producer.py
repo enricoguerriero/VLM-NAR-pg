@@ -15,7 +15,7 @@ from src.utils import (
     set_global_seed,
     load_config
 )
-from src.data import BinaryTokenDataset
+from src.data import BinaryTokenDataset, VLMVideoDataset
 
 def main():
     parser = ArgumentParser("Producer: generate captions stream (no padding)")
@@ -43,6 +43,18 @@ def main():
         data_dir=os.path.join(config["token_folder"], args.model_name, "binary"),
         num_classes=4
     )
+    LABELS_CSV = "data/clips/test/labels.csv"
+    ds = VLMVideoDataset(
+        csv_file       = LABELS_CSV,
+        processor      = model.processor,
+        prompts        = ["USER: Describe the clip; focus on who is present in the clip: <video>. ASSISTANT:",
+                          "USER: Describe the clip; focus on eventual respiration equipment and how is it eventually used: <video>. ASSISTANT:",
+                          "USER: Describe the clip; if the baby / doll is being stimulated, describe also that movement: <video>. ASSISTANT:",
+                          "USER: Describe the clip; if a suction tube is present, describe that and how it is used. Note that the suction tube is different from a ventilation mask: <video>. ASSISTANT:"],   
+        system_message = "This is a simulation of a medical resuscitation context.",                             
+        frames         = 16,
+        frame_sample   = "uniform",
+    )
 
     # prepare output
     os.makedirs(os.path.dirname(args.output_file) or ".", exist_ok=True)
@@ -52,14 +64,7 @@ def main():
     clip_counter = 0
     with open(args.output_file, "a") as outf:
         for sample in tqdm(ds, desc="Generating samples (no padding)"):
-            # each sample already contains:
-            #   sample["input_ids"]:     [1, seq_len]
-            #   sample["attention_mask"]: [1, seq_len]
-            #   sample["pixel_values_videos"]: [1, ...]
-            #   sample["class_idx"]:     []
-            #   sample["label"]:         [...]
-            #
-            # just send them straight to the device:
+
             inputs = {
                 "input_ids":        sample["input_ids"].to(device),
                 "attention_mask":   sample["attention_mask"].to(device),
