@@ -116,6 +116,9 @@ def main():
         frames         = 8,
         frame_sample   = "uniform",
     )
+    print(f"✓ Loaded {len(ds)} samples from {LABELS_CSV}")
+    print(f"Length of label columns: {len(ds.label_cols)}")
+    print(f"Length of dataset: {len(ds)}")
 
     # ── Load judge (text-only) ──────────────────────────────────────────────
     judge_tok  = AutoTokenizer.from_pretrained(MODEL_JUDGE)
