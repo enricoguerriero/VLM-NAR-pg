@@ -118,7 +118,7 @@ def main():
         csv_file       = LABELS_CSV,
         processor      = caption_processor,
         prompts        = [ "USER: Describe the clip: <video>. ASSISTANT:" ] * 4,   
-        system_message = "",                             
+        system_message = "This is a medica resuscitation setting. You have to describe in details firstly who are the subjects in the video, and then what they are doing. Focus on medical threatments.",                             
         frames         = 8,
         frame_sample   = "uniform",
     )
