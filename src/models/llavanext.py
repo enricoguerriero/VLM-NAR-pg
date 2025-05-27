@@ -28,7 +28,8 @@ class LlavaNext(BaseModel):
                 torch_dtype=torch.float16
             ).to(self.device)
         self.processor = AutoProcessor.from_pretrained(base_model_id)
-        
+        self.processor.tokenizer.padding_side = "left"
+
         lora_config = LoraConfig(
             r=16,
             lora_alpha=32,
@@ -223,7 +224,7 @@ class LlavaNext(BaseModel):
             input_ids=input_ids,
             attention_mask=attention_mask,
             max_new_tokens=256,
-            temperature=0.7,         
+            temperature=0.2,         
             top_p=0.9,
             do_sample=True
         )
