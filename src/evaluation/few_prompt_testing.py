@@ -49,7 +49,7 @@ PROMPTS = [
     You are a precise evaluator. Answer only “yes” or “no”.
 
     Example 1:
-      Description: “A mask covers the baby's mouth and nose to assist breathing.”
+      Description: “A mask covers the baby's mouth and nose to assist breathing / A ventilator is being used on the baby.”
       Answer: yes
 
     Example 2:
