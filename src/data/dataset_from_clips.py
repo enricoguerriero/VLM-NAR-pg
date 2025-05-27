@@ -75,13 +75,13 @@ class VLMVideoDataset(Dataset):
         clip_idx, prompt_idx = divmod(idx, 4)
         row = self.df.iloc[clip_idx]
 
-        images = self._load_frames(row.file)
+        videos = self._load_frames(row.file)
         user_prompt = self.prompts[prompt_idx]
         full_prompt = f"{self.system}\n{user_prompt}"
 
         # processor builds the model-ready dict
         model_inputs = self.processor(
-            images=images,
+            videos=videos,
             text=full_prompt,
             return_tensors="pt",
             padding=True,
