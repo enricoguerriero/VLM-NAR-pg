@@ -103,9 +103,9 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ── Load caption model (producer) ───────────────────────────────────────
-    #   load_model() ≈ your helper that returns the HF model *and* its processor
-    caption_model, caption_processor = load_model(MODEL_CAPTION, return_processor=True)
+    caption_model = load_model(MODEL_CAPTION)
     caption_model.to(device).eval()
+    caption_processor = caption_model.processor
 
     # ── Build dataset (each row = one (clip, prompt) pair) ─────────────────
     ds = VLMVideoDataset(
