@@ -120,7 +120,7 @@ def main():
         prompts        = ["USER: Describe the clip; focus on who is present in the clip: <video>. ASSISTANT:",
                           "USER: Describe the clip; focus on eventual respiration equipment and how is it eventually used: <video>. ASSISTANT:",
                           "USER: Describe the clip; if the baby / doll is being stimulated, describe also that movement: <video>. ASSISTANT:",
-                          "USER: Describe the clip; if a suction tube is present, describe that and how it is used: <video>. ASSISTANT:"],   
+                          "USER: Describe the clip; if a suction tube is present, describe that and how it is used. Note that the suction tube is different from a ventilation mask: <video>. ASSISTANT:"],   
         system_message = "This is a simulation of a medical resuscitation context.",                             
         frames         = 8,
         frame_sample   = "uniform",
