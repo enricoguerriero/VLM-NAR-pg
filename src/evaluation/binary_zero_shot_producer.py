@@ -55,6 +55,7 @@ def main():
         frames         = 16,
         frame_sample   = "uniform",
     )
+    label2idx = {name: i for i, name in enumerate(ds.label_cols)} # for label mapping
 
     # prepare output
     os.makedirs(os.path.dirname(args.output_file) or ".", exist_ok=True)
@@ -78,10 +79,12 @@ def main():
                     do_sample=False
                 )
 
+            class_idx = label2idx[sample["label_name"]]
+            
             # single output per sample
             entry = {
                 "clip_idx":  clip_counter,
-                "class_idx": int(sample["class_idx"].item()),
+                "class_idx": class_idx,
                 "label":     sample["label"].tolist(),
                 "caption":   captions[0]
             }
