@@ -63,12 +63,12 @@ def main():
     logger.info(f"Streaming captions to {args.output_file}")
     clip_counter = 0
     with open(args.output_file, "a") as outf:
-        for sample in tqdm(ds, desc="Generating samples (no padding)"):
+        for sample in tqdm(ds, desc="Generating samples"):
 
             inputs = {
-                "input_ids":        sample["input_ids"].to(device),
-                "attention_mask":   sample["attention_mask"].to(device),
-                "pixel_values_videos": sample["pixel_values_videos"].to(device),
+                "input_ids":        sample["input_ids"].unsqueeze(0).to(device),
+                "attention_mask":   sample["attention_mask"].unsqueeze(0).to(device),
+                "pixel_values_videos": sample["pixel_values_videos"].unsqueeze(0).to(device),
             }
 
             with torch.no_grad():
