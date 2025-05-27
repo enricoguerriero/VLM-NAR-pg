@@ -5,6 +5,7 @@ Evaluate clips with the VLMVideoDataset (4-prompt version).
 """
 import os, random, json
 from pathlib import Path
+import re
 
 from dotenv import load_dotenv
 from huggingface_hub import login
@@ -178,7 +179,8 @@ def main():
             max_new_tokens = 15,
             do_sample = False,
         )[0]["generated_text"].strip().lower()
-        pred = judge_raw.startswith("yes")
+        match = re.search(r"\b(yes|no)\b", judge_raw)
+        pred = match.group(1) == "yes" if match else False
 
         # — log result —
         rec = dict(
