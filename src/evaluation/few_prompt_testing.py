@@ -173,8 +173,6 @@ def main():
                 do_sample = False,
             ).strip()
 
-        print(f"[{ds_idx}] Caption: {repr(caption)}")
-
         # — build judge prompt —
         judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
 
@@ -198,7 +196,7 @@ def main():
             judge_raw   = judge_raw,
             prediction  = pred,
         )
-        print(json.dumps(rec, ensure_ascii=False, indent=2))
+        print(json.dumps(rec, ensure_ascii=False, indent=2), flush=True)
         results.append(rec)
 
     # ── Save JSON ───────────────────────────────────────────────────────────
