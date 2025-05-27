@@ -103,7 +103,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ── Load caption model (producer) ───────────────────────────────────────
-    caption_model = load_model(MODEL_CAPTION)
+    caption_model = load_model(MODEL_CAPTION, checkpoint=None)
     caption_model.to(device).eval()
     caption_processor = caption_model.processor
 
