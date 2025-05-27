@@ -119,7 +119,9 @@ def main():
     print(f"✓ Loaded {len(ds)} samples from {LABELS_CSV}")
     print(f"Length of label columns: {len(ds.label_cols)}")
     print(f"Length of dataset: {len(ds)}")
-
+    sample = ds[0]
+    print(f"Sample 0: {sample}")
+    
     # ── Load judge (text-only) ──────────────────────────────────────────────
     judge_tok  = AutoTokenizer.from_pretrained(MODEL_JUDGE)
     judge_lm   = AutoModelForCausalLM.from_pretrained(
