@@ -111,7 +111,7 @@ def main():
     ds = VLMVideoDataset(
         csv_file       = LABELS_CSV,
         processor      = caption_processor,
-        prompts        = [ "Describe the clip." ] * 4,   
+        prompts        = [ "Describe the clip: <video>" ] * 4,   
         system_message = "",                             
         frames         = 8,
         frame_sample   = "uniform",
