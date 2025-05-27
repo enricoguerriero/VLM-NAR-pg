@@ -49,7 +49,7 @@ PROMPTS = [
     You are a precise evaluator. Answer only “yes” or “no”.
 
     Example 1:
-      Description: “A mask covers the baby's mouth and nose to assist breathing / A ventilator is being used on the baby.”
+      Description: “A mask covers the baby's mouth and nose to assist breathing / The baby is connected with a ventilator.”
       Answer: yes
 
     Example 2:
@@ -58,7 +58,7 @@ PROMPTS = [
 
     Now evaluate:
     Description: '{answer}'
-    Question: Is a ventilation mask held over the baby's (or mannequin's, or doll's) mouth and nose? (A mask, not a tube.)
+    Question: Is a ventilation mask held over the baby's (or mannequin's, or doll's) mouth and nose? Or is the baby (or mannequin, or doll) connected to a ventilator? (A mask, not a tube.)
     """,
 
     # Stimulation (up-and-down movements)
