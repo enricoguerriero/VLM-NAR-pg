@@ -23,21 +23,26 @@ SEED          = 42
 
 PROMPTS = [
     # Baby visible (real baby vs. mannequin)
-    """
-    You are a precise evaluator. Answer only “yes” or “no”.
+    '''You are a precise evaluator. Respond with **just** yes or no.
+    If you are uncertain, answer no.
 
-    Example 1:
-      Description: “A mannequin representing a baby is present on the table.”
-      Answer: yes
+    Definition of “yes”:
+      A real baby *or* a mannequin baby is visible in the clip.
+    Definition of “no”:
+      No baby and no mannequin is visible.
 
-    Example 2:
-      Description: “There is a medical setting around a resuscitation table; no real baby or mannequin is present.”
-      Answer: no
+    Example 1  
+    Description: "A mannequin representing a baby is present on the table."  
+    Answer: yes
 
-    Now evaluate:
-    Description: '{answer}'
-    Question: Is a real baby or a mannequin visible in this clip? 
-    """,
+    Example 2  
+    Description: "There is a medical setting around a resuscitation table; no real baby or mannequin is present."  
+    Answer: no
+
+    Now evaluate:  
+    Description: "{answer}"  
+    Question: Is a baby (real **or** mannequin) visible?
+    ''',
 
     # Ventilation (mask usage)
     """
