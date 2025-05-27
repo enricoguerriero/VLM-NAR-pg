@@ -122,6 +122,13 @@ def main():
         frames         = 8,
         frame_sample   = "uniform",
     )
+    # print some dataset info
+    print(f"Loaded {len(ds)} samples from {LABELS_CSV} with {len(ds.label_cols)} label columns.")
+    print(f"Dataset length: {len(ds)}")
+    print(f"Dataset clips with baby visible: {ds.df[ds.label_cols[0]].sum()}")  # Baby visible
+    print(f"Dataset clips with ventilation: {ds.df[ds.label_cols[1]].sum()}")  # Ventilation
+    print(f"Dataset clips with stimulation: {ds.df[ds.label_cols[2]].sum()}")  # Stimulation
+    print(f"Dataset clips with suction: {ds.df[ds.label_cols[3]].sum()}")      # Suction
     
     # ── Load judge (text-only) ──────────────────────────────────────────────
     judge_tok  = AutoTokenizer.from_pretrained(MODEL_JUDGE)
