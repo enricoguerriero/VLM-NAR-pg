@@ -41,7 +41,7 @@ PROMPTS = [
 
     Now evaluate:  
     Description: "{answer}"  
-    Question: Is a baby (real **or** mannequin) visible?
+    Question: Is a baby (real **or** mannequin, or doll) visible?
     ''',
 
     # Ventilation (mask usage)
@@ -58,7 +58,7 @@ PROMPTS = [
 
     Now evaluate:
     Description: '{answer}'
-    Question: Is a ventilation mask held over the baby's (or mannequin's) mouth and nose? (A mask, not a tube.)
+    Question: Is a ventilation mask held over the baby's (or mannequin's, or doll's) mouth and nose? (A mask, not a tube.)
     """,
 
     # Stimulation (up-and-down movements)
@@ -75,7 +75,7 @@ PROMPTS = [
 
     Now evaluate:
     Description: '{answer}'
-    Question: Are health workers applying up-and-down stimulation to the baby's (or mannequin's) back, buttocks, or trunk?
+    Question: Are health workers applying up-and-down stimulation to the baby's (or mannequin's, or doll's) back, buttocks, or trunk?
     """,
 
     # Suction (small tube insertion)
@@ -92,7 +92,7 @@ PROMPTS = [
 
     Now evaluate:
     Description: '{answer}'
-    Question: Is a small suction tube inserted into the baby's (or mannequin's) mouth or nose? (Not a mask.)
+    Question: Is a small suction tube inserted into the baby's (or mannequin's, or doll's) mouth or nose? (Not a mask.)
     """
 ]
 
