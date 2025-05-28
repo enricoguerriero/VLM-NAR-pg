@@ -156,6 +156,48 @@ class LlavaNext(BaseModel):
                 "input_ids": input_ids,
                 "attention_mask": attention_mask,
                 "labels": labels}
+    
+    def build_video_colllate_fn(self, pad_to_multiple_of: int | None = None):
+        """
+        Return a collate_fn that works with processors that *do not* expose
+        a .pad() method (e.g. LlavaNextVideoProcessor).
+
+        It pads text with `processor.tokenizer.pad()` and stacks video tensors
+        along the batch dimension. Frame counts or spatial dims must already
+        match across items (true if you sampled a fixed #frames and used
+        a deterministic transform / resize inside the processor).
+        """
+
+        tokenizer = self.processor.tokenizer  # every HF Processor exposes this
+
+        def collate_fn(batch):
+            # 1)  separate the pieces we need to treat differently
+            pixel_values = torch.stack([item["pixel_values"] for item in batch])  # (B, T, C, H, W)
+            labels       = torch.stack([item["labels"]        for item in batch])  # (B, 4)
+            files        = [item["file"] for item in batch]
+
+            # 2)  text keys → list of tensors
+            text_dict = {
+                "input_ids":      [item["input_ids"]      for item in batch],
+                "attention_mask": [item["attention_mask"] for item in batch],
+            }
+
+            # 3)  pad the text part
+            text_batch = tokenizer.pad(
+                text_dict,
+                padding=True,
+                return_tensors="pt",
+                pad_to_multiple_of=pad_to_multiple_of,
+            )
+
+            # 4)  merge and hand back
+            text_batch["pixel_values"] = pixel_values
+            text_batch["labels"]       = labels
+            text_batch["file"]         = files          # keep as a Python list
+
+            return text_batch
+
+        return collate_fn
         
 
 

@@ -70,8 +70,7 @@ def main():
     logger.info(f"Validation dataset size: {len(validation_ds)}")
     
     # ─── DataLoaders ─────────────────────────────────────────────────────────────
-    def collate_fn(batch):
-        return model.processor.pad(batch, return_tensors="pt")
+    collate_fn = model.build_video_colllate_fn()
     logger.info("Creating DataLoaders...")
     train_loader = DataLoader(
         train_ds,
