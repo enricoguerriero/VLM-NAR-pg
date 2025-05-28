@@ -13,7 +13,7 @@ import re
 
 PROMPTS = [
     # Baby visible (real baby vs. mannequin)
-    '''You are a precise evaluator. Respond with **just** yes or no.
+    '''You are a precise evaluator. Respond with yes or no.
     If you are uncertain, answer no.
 
     Definition of “yes”:
@@ -31,7 +31,7 @@ PROMPTS = [
 
     Now evaluate:  
     Description: "{answer}"  
-    Question: Is a baby (real **or** mannequin, or doll) visible?
+    Question: Is a subject visible?
     ''',
 
     # Ventilation (mask usage)
