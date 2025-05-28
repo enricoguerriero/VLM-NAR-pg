@@ -29,3 +29,8 @@ prompts_0s:
   - "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker performing up-and-down stimulation on the mannequin's back, buttocks, or trunk? These are small, quick movements. Be clear and specific. If there is not a baby / mannequin visible, no treatment is being performed."
   - "Describe the scene and give it a caption. Is the baby or mannequin visible on the table? If yes, is a health worker inserting a small tube into the mouth or nose of the mannequin to provide suction? This cannot occur at the same time as mask ventilation. Be explicit. If there is not a baby / mannequin visible, no treatment is being performed."
 
+system_message: |
+  This is a simulation of a medical resuscitation context. The video is recorded from above a resuscitation table.
+
+prompt: |
+  Describe the scene in the clip. Focus on the subjects, actions and medical treatments.
