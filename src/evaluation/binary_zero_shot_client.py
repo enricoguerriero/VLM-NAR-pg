@@ -81,7 +81,8 @@ def main():
         tokenizer=judge_tokenizer,
         task="text-generation",
         pad_token_id=judge_tokenizer.eos_token_id,
-        # device_map="auto"
+        return_full_text=False,
+        clean_up_tokenization_spaces=True,
     )
 
     # open files
