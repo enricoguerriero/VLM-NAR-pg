@@ -9,6 +9,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, TextGenerationPipe
 from dotenv import load_dotenv
 from huggingface_hub import login
 from src.utils import setup_logging
+import re
 
 PROMPTS = [
     """
@@ -104,14 +105,15 @@ def main():
         out = judge_pipe(prompt,
                          max_new_tokens=32,
                          do_sample=True,
-                         batch_size=1)[0]["generated_text"]
+                         batch_size=1)[0]["generated_text"].strip().lower()
         # extract yes/no
-        answer = out.split('[/INST]')[-1].strip().splitlines()[-1].lower()
-        pred   = answer.startswith("yes")
+        match = re.search(r"\b(yes|no)\b", out)
+        pred = match.group(1) == "yes" if match else False
+        
 
         result = {
             **entry,
-            "answer": answer,
+            "answer": out,
             "pred":   bool(pred)
         }
         outfile.write(json.dumps(result, ensure_ascii=False) + "\n")
