@@ -12,45 +12,78 @@ from src.utils import setup_logging
 import re
 
 PROMPTS = [
+    # Baby visible (real baby vs. mannequin)
+    '''You are a precise evaluator. Respond with **just** yes or no.
+    If you are uncertain, answer no.
+
+    Definition of “yes”:
+      A real baby *or* a mannequin baby is visible in the clip.
+    Definition of “no”:
+      No baby and no mannequin is visible.
+
+    Example 1  
+    Description: "A mannequin / a doll representing a baby is present on the table."  
+    Answer: yes
+
+    Example 2  
+    Description: "There is a medical setting around a resuscitation table; no real baby or mannequin is present."  
+    Answer: no
+
+    Now evaluate:  
+    Description: "{answer}"  
+    Question: Is a baby (real **or** mannequin, or doll) visible?
+    ''',
+
+    # Ventilation (mask usage)
     """
-    You are a judge. You are given the description of a small clip from a VLM model. 
-    The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-    The description given from the model is the following:
-    '{answer}'
-    According to the description, is there a baby / mannequin / doll visible in the clip?
-    Note that, if the caption refers to a doll, it means that the mannequin is visible.
-    Start your answer with "yes" or "no".
+    You are a precise evaluator. Answer only “yes” or “no”.
+
+    Example 1:
+      Description: “A mask covers the baby's mouth and nose to assist breathing / The baby is connected with a ventilator.”
+      Answer: yes
+
+    Example 2:
+      Description: “A tube is inserted but no mask is used.”
+      Answer: no
+
+    Now evaluate:
+    Description: '{answer}'
+    Question: Is a ventilation mask held over the baby's (or mannequin's, or doll's) mouth and nose? Or is the baby (or mannequin, or doll) connected to a ventilator? (A mask, not a tube.)
     """,
+
+    # Stimulation (up-and-down movements)
     """
-    You are a judge. You are given the description of a small clip from a VLM model. 
-    The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-    The description given from the model is the following:
-    '{answer}'
-    According to the description, are the health workers holding a ventilation mask over the baby's (or mannequin's) face? 
-    The mask is supposed to cover the mouth and nose of the baby.
-    Note that it has to be a ventilation mask, not just a tube.
-    Start your answer with "yes" or "no".
+    You are a precise evaluator. Answer only “yes” or “no”.
+
+    Example 1:
+      Description: “A health worker applies rhythmic up-and-down pressure on the baby's back.”
+      Answer: yes
+
+    Example 2:
+      Description: “No stimulation: only mask ventilation is performed.”
+      Answer: no
+
+    Now evaluate:
+    Description: '{answer}'
+    Question: Are health workers applying up-and-down stimulation to the baby's (or mannequin's, or doll's) back, buttocks, or trunk?
     """,
+
+    # Suction (small tube insertion)
     """
-    You are a judge. You are given the description of a small clip from a VLM model.
-    The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-    The description given from the model is the following:
-    '{answer}'
-    According to the description, are the health workers applying stimulation to the baby's (or mannequin's) back, buttocks (nates), or trunk, using up-and-down movements?
-    The stimulation is supposed to be applied to the back, buttocks (nates), or trunk.
-    Note that the stimulation can occur simultaneously with ventilation or suction.
-    Start your answer with "yes" or "no".
-    """,
+    You are a precise evaluator. Answer only “yes” or “no”.
+
+    Example 1:
+      Description: “A slender suction tube is inserted into the baby's mouth or nose.”
+      Answer: yes
+
+    Example 2:
+      Description: “No tube insertion; only a mask is used.”
+      Answer: no
+
+    Now evaluate:
+    Description: '{answer}'
+    Question: Is a small suction tube inserted into the baby's (or mannequin's, or doll's) mouth or nose? (Not a mask.)
     """
-    You are a judge. You are given the description of a small clip from a VLM model.
-    The clip is about the simulation of a newborn resuscitation. In the simulation, a mannequin is adopted to look like a baby.
-    The description given from the model is the following:
-    '{answer}'
-    According to the description, are the health workers inserting a small suction tube into the baby's (or mannequin's) mouth or nose?
-    The suction tube is supposed to be inserted into the mouth or nose of the baby.
-    Note that it has to be a tube, not a mask.
-    Start your answer with "yes" or "no".
-    """            
 ]
 
 LABELS = ["Baby visible", "Ventilation", "Stimulation", "Suction"]
