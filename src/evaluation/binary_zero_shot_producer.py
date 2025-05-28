@@ -86,7 +86,7 @@ def main():
                 "clip_idx":  clip_counter,
                 "class_idx": class_idx,
                 "label":     sample["label"].tolist(),
-                "caption":   captions[0]
+                "caption":   captions
             }
             outf.write(json.dumps(entry, ensure_ascii=False) + "\n")
             outf.flush()
