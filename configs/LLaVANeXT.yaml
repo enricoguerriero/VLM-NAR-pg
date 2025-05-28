@@ -34,3 +34,5 @@ system_message: |
 
 prompt: |
   Describe the scene in the clip. Focus on the subjects, actions and medical treatments.
+
+frames: 16

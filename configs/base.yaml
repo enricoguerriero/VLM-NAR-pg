@@ -55,3 +55,9 @@ cooldown: null
 min_lr: null
 
 threshold: 0.5
+
+train_csv: "data/clips/train/labels.csv"
+validation_csv: "data/clips/validation/labels.csv"
+test_csv: "data/clips/test/labels.csv"
+
+frame_sample: "uniform"
