@@ -53,7 +53,7 @@ def main():
     train_ds = VLMVideoMultiLabelDataset(
         csv_file = config["train_csv"],
         processor = model.processor,
-        prompts = config["prompt"],
+        prompt = config["prompt"],
         system_message = config["system_message"],
         frames = config["frames"],
         frame_sample = config["frame_sample"],
@@ -61,7 +61,7 @@ def main():
     validation_ds = VLMVideoMultiLabelDataset(
         csv_file = config["validation_csv"],
         processor = model.processor,
-        prompts = config["prompt"],
+        prompt = config["prompt"],
         system_message = config["system_message"],
         frames = config["frames"],
         frame_sample = config["frame_sample"],

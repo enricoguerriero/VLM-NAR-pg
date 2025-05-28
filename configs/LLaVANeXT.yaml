@@ -14,7 +14,7 @@ mode: "min"
 scheduler_patience: 2
 patience: 5
 epochs: 8
-threshold: [0.351, 0.323, 0.43, 0.317]
+threshold: [0.5, 0.5, 0.5, 0.5]
 num_workers: 0
 freezing_condition: "lora"
 eta_min: 0.001
