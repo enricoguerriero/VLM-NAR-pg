@@ -16,6 +16,6 @@ echo "virtual environment activated"
 
 export PYTHONPATH=./
 python src/data/export_tokens.py \
-    --model_name "VideoLLaVA"
+    --model_name "LLaVANeXT"
 
 echo "--- THE END ---"
