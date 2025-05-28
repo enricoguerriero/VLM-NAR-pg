@@ -172,7 +172,7 @@ class LlavaNext(BaseModel):
 
         def collate_fn(batch):
             # 1)  separate the pieces we need to treat differently
-            pixel_values = torch.stack([item["pixel_values"] for item in batch])  # (B, T, C, H, W)
+            pixel_values_videos = torch.stack([item["pixel_values_videos"] for item in batch])  # (B, T, C, H, W)
             labels       = torch.stack([item["labels"]        for item in batch])  # (B, 4)
             files        = [item["file"] for item in batch]
 
@@ -191,7 +191,7 @@ class LlavaNext(BaseModel):
             )
 
             # 4)  merge and hand back
-            text_batch["pixel_values"] = pixel_values
+            text_batch["pixel_values_videos"] = pixel_values_videos
             text_batch["labels"]       = labels
             text_batch["file"]         = files          # keep as a Python list
 
