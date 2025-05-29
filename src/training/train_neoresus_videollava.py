@@ -296,6 +296,7 @@ def main(
         save_strategy="epoch",
         eval_strategy="epoch",
         remove_unused_columns=False,
+        eval_accumulation_steps=1, 
         report_to="wandb",
         run_name="videollava_neoresus",
         label_names=["labels"],  # suppresses Trainer warning
