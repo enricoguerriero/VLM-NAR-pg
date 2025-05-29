@@ -468,6 +468,10 @@ class BaseModel(nn.Module):
         with torch.no_grad():
             for batch in tqdm(dataloader, desc="Evaluating", unit="batch"):
                 labels = batch.pop("labels").to(self.device)
+                if "file" in batch:
+                    batch.pop("file")
+                if "label_names" in batch:
+                    batch.pop("label_names")
                 outputs = self.forward(**batch, labels = labels, loss_fct = criterion)
                 loss = outputs["loss"]
                 logits = outputs["logits"]
