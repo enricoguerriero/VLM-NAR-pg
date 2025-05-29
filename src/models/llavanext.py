@@ -29,6 +29,7 @@ class LlavaNext(BaseModel):
             ).to(self.device)
         self.processor = AutoProcessor.from_pretrained(base_model_id)
         self.processor.tokenizer.padding_side = "left"
+        self.backbone.language_model.gradient_checkpointing_enable()
 
         lora_config = LoraConfig(
             r=16,
