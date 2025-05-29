@@ -20,6 +20,7 @@ MODEL_CAPTION = "LLaVANeXT"                                    # producer VLM
 MODEL_JUDGE   = "mistralai/Mistral-7B-Instruct-v0.1"           # text judge
 NUM_SAMPLES   = 40
 SEED          = 42
+DEVICE = "cuda:1"
 
 PROMPTS = [
     # Baby visible (real baby vs. mannequin)
@@ -106,7 +107,7 @@ def main():
     login(os.getenv("HUGGINGFACE_TOKEN"))
     # set_global_seed(SEED)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(DEVICE)
 
     # ── Load caption model (producer) ───────────────────────────────────────
     caption_model = load_model(MODEL_CAPTION, checkpoint=None)
