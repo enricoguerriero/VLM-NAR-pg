@@ -151,8 +151,7 @@ def main():
     )
 
     # ── Sampling ────────────────────────────────────────────────────────────
-    all_idxs = list(range(len(ds)))
-    sampled  = random.Random(SEED).sample(all_idxs, k=min(NUM_SAMPLES, len(ds)))
+    sampled = ds.balanced_sample(10)
 
     # Map label-name → index so we can reuse PROMPTS list
     label2idx = {name: i for i, name in enumerate(ds.label_cols)}

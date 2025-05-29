@@ -5,7 +5,7 @@ from typing import List, Dict
 
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, Subset
 from torchvision.io import read_video
 from PIL import Image
 
@@ -97,3 +97,45 @@ class VLMVideoDataset(Dataset):
         model_inputs["file"] = row.file
 
         return model_inputs
+
+    # ─────────────────── balanced sampler ───────────────────
+    def balanced_sample(self, n: int, *, rng: random.Random | None = None) -> Subset:
+        """
+        Return a balanced subset of size 4*n.
+        For every label column we pick n examples: n/2 positive + n/2 negative.
+
+        Parameters
+        ----------
+        n      : # samples *per class*  (must be even so we can split 50/50)
+        rng    : optional `random.Random` instance for reproducible sampling
+
+        Returns
+        -------
+        torch.utils.data.Subset[VLMVideoDataset]
+        """
+        if n % 2:
+            raise ValueError("`n` must be even so it can be split evenly into pos/neg.")
+        rng = rng or random
+        half = n // 2
+        dataset_indices: list[int] = []
+
+        for prompt_idx, col in enumerate(self.label_cols):
+            pos_clips = self.df.index[self.df[col] == 1].tolist()
+            neg_clips = self.df.index[self.df[col] == 0].tolist()
+
+            if len(pos_clips) < half or len(neg_clips) < half:
+                raise ValueError(
+                    f"Not enough positives/negatives for column '{col}'. "
+                    f"Needed ≥{half} of each."
+                )
+
+            pos_sample = rng.sample(pos_clips, half)
+            neg_sample = rng.sample(neg_clips, half)
+
+            # convert from clip-index to dataset-index (clip_idx * 4 + prompt_idx)
+            dataset_indices.extend(ci * 4 + prompt_idx for ci in pos_sample)
+            dataset_indices.extend(ci * 4 + prompt_idx for ci in neg_sample)
+
+        rng.shuffle(dataset_indices)  # optional: mix all classes together
+        return Subset(self, dataset_indices)
+    
