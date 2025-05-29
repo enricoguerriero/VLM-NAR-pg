@@ -294,7 +294,7 @@ def main(
         fp16=True,
         logging_steps=20,
         save_strategy="epoch",
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         remove_unused_columns=False,
         report_to="wandb",
         run_name="videollava_neoresus",
