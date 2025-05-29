@@ -211,14 +211,16 @@ def main(argv: List[str]):
         vp = rec["video"]
         try:
             pred_js, _ = classify_clip(model, processor, vp, apply_rules=not args.no_rules)
-            sink.write(json.dumps({"video": vp, "pred": pred_js}, ensure_ascii=False) + "\n")
             # accumulate metrics if gt exists
             if rec["labels"] is not None:
+                label_list = []
                 for lbl in LABELS:
                     gt = int(rec["labels"].get(lbl, 0))
                     pr = 1 if pred_js[lbl] in {"yes", "true", "1"} else 0
                     y_true[lbl].append(gt)
                     y_pred[lbl].append(pr)
+                    label_list.append(f"{lbl}: {gt} (pred: {pr})")
+            sink.write(json.dumps({"video": vp, "pred": pred_js, "label": label_list}, ensure_ascii=False) + "\n")
         except Exception as e:
             sink.write(json.dumps({"video": vp, "error": str(e), "labels": rec["labels"]}) + "\n")
             sink.flush()
