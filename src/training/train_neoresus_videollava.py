@@ -157,7 +157,7 @@ def main(train_json: str,
         fp16                         = True,
         logging_steps                = 20,
         save_strategy                = "epoch",
-        evaluation_strategy          = "epoch",
+        eval_strategy          = "epoch",
         report_to                    = "none",
     )
 
