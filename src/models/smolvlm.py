@@ -144,3 +144,22 @@ class SmolVLM(BaseModel):
             "attention_mask": torch.cat([item["attention_mask"] for item in batch], dim=0),
             "labels": torch.stack([item["labels"] for item in batch], dim=0),
         }
+        
+    def generate_answer(self, inputs, max_new_tokens=128, do_sample=False):
+        """
+        Generates an answer from the model.
+        """
+        outputs = self.backbone.generate(
+            pixel_values=inputs["pixel_values"],
+            input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            max_new_tokens=max_new_tokens,
+            do_sample=do_sample,
+            return_dict_in_generate=True,
+            output_scores=True
+        )
+        
+        generated_ids = outputs.sequences[:, inputs["input_ids"].shape[1]:]
+        generated_texts = self.processor.batch_decode(generated_ids, skip_special_tokens=True)
+        
+        return generated_texts[0].strip()
