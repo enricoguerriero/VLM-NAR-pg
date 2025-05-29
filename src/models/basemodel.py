@@ -15,6 +15,7 @@ from torch.amp import GradScaler, autocast
 from torch.nn.utils import clip_grad_norm_
 from torch.optim import Optimizer, lr_scheduler
 import copy
+import gc
 
 class BaseModel(nn.Module):
     """
@@ -453,6 +454,9 @@ class BaseModel(nn.Module):
         logits_tensor = torch.cat(logits_list)
         labels_tensor = torch.cat(labels_list)
         avg_loss = total_loss / total_samples if total_samples > 0 else 0.0
+        del logits_list, labels_list, batch, loss, logits, labels
+        torch.cuda.empty_cache()
+        gc.collect()
         return avg_loss, logits_tensor, labels_tensor
     
     def eval_epoch(self, dataloader: DataLoader, criterion: nn.Module):
@@ -485,6 +489,9 @@ class BaseModel(nn.Module):
         logits_tensor = torch.cat(logits_list)
         labels_tensor = torch.cat(labels_list)
         avg_loss = total_loss / total_samples if total_samples > 0 else 0.0
+        del logits_list, labels_list, batch, loss, logits, labels
+        torch.cuda.empty_cache()
+        gc.collect()
         return avg_loss, logits_tensor, labels_tensor
         
 

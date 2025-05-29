@@ -181,9 +181,9 @@ def main():
         desc.set_postfix({"train_loss": train_loss})
         logger.debug("Computing train metrics...")
         train_metrics = compute_metrics(
-            logits=train_logits,
-            labels=train_labels,
-            threshold=threshold
+            logits=train_logits.detach().cpu(),
+            labels=train_labels.detach().cpu(),
+            threshold=threshold.detach().cpu()
         )
         logger.debug(f"Train metrics: {train_metrics}")
         desc.set_postfix({"train_f1": train_metrics["f1_macro"]})
@@ -196,9 +196,9 @@ def main():
         desc.set_postfix({"val_loss": val_loss})
         logger.debug("Computing validation metrics...")
         val_metrics = compute_metrics(
-            logits=val_logits,
-            labels=val_labels,
-            threshold=threshold
+            logits=val_logits.detach().cpu(),
+            labels=val_labels.detach().cpu(),
+            threshold=threshold.detach().cpu()  
         )
         logger.debug(f"Validation metrics: {val_metrics}")
         desc.set_postfix({"val_f1": val_metrics["f1_macro"]})
