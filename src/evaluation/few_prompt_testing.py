@@ -22,7 +22,7 @@ NUM_SAMPLES   = 40
 SEED          = 42
 DEVICE = "cuda" # for slurm
 CAPTION_DEVICE = "cuda:1" 
-JUDGE_DEVICE   = "cuda:0" 
+JUDGE_DEVICE   = "cuda:5" 
 
 PROMPTS = [
 		# Baby visible (real baby vs. mannequin)
