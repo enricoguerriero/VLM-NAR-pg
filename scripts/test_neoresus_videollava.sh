@@ -17,13 +17,10 @@ echo "virtual environment activated"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
 
-python src/training/test.py   \
-    --train_json data/clips/train.jsonl   \
-    --valid_json data/clips/validation.jsonl   \
-    --output_dir checkpoints/neoresus_lora   \
-    --batch_per_gpu 1   \
-    --grad_accum 4   \
-    --epochs 3   \
-    --lr 1e-4
+python src/evaluation/test_neoresus_videollava.py \
+       --model LanguageBind/Video-LLaVA-7B-hf \
+       --jsonl data/clips/test.jsonl \
+       --wandb_project videollava-baselines \
+       --wandb_run zeroshot
 
 echo "--- THE END ---"

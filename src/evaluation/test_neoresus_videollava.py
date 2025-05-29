@@ -1,50 +1,56 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
-Inference / test script for neonatal-resuscitation multi-label classification
-with Video-LLaVA.
+Test‑and‑metrics script for neonatal‑resuscitation multi‑label classification with **Video‑LLaVA**.
 
-New in this version
+**What’s new (v2)**
 -------------------
-1. **W&B integration** (metrics are logged when --labels is provided).
-2. Full accuracy / precision / recall / F1 per class + macro averages.
+* **W&B logging** (`--wandb_project`, `--wandb_run` or `--no_wandb`).
+* Computes **accuracy, precision, recall, F1** for *each* class **and macro‑average** whenever ground‑truth labels are present (JSONL input).
+* Prints a nice table and logs the same dictionary to W&B.
 
-Run examples
+Input modes (unchanged)
+-----------------------
+1. `--video path.mp4`           – single clip (no metrics).
+2. `--list paths.txt`           – list of clips (no metrics).
+3. `--jsonl split.jsonl`        – HF‑style file with keys `video` **and** optional `labels`.
+   If `labels` are present the script will compute metrics.
+
+Examples
+--------
+Zero‑shot baseline & log metrics to W&B:
+```bash
+python test_neoresus_videollava.py \
+  --model LanguageBind/Video-LLaVA-7B-hf \
+  --jsonl data/clips/test.jsonl \
+  --wandb_project videollava-baselines \
+  --wandb_run     zeroshot
+```
+
+After LoRA fine‑tuning:
+```bash
+python test_neoresus_videollava.py \
+  --model checkpoints/neoresus_lora \
+  --jsonl data/clips/test.jsonl \
+  --wandb_project videollava-ft \
+  --wandb_run     lora_r16_a32
+```
+
+Dependencies
 ------------
-# Zero-shot baseline
-python test_neoresus_videollava.py \
-    --model LanguageBind/Video-LLaVA-7B-hf \
-    --video data/clips/clip_00001.mp4
-
-# Fine-tuned LoRA checkpoint with metrics logging
-python test_neoresus_videollava.py \
-    --model checkpoints/neoresus_lora \
-    --list  data/clips/testlist.txt \
-    --labels data/clips/test.jsonl \
-    --project videollava_eval
+```
+pip install torch>=2.2 transformers==4.52.3 av numpy peft tqdm \
+            scikit-learn wandb
+```
 """
 
-from __future__ import annotations
-
-import argparse
-import json
-import os
-import re
-import sys
-from typing import Dict, List, Sequence
-
-import av
-import numpy as np
-import torch
-from datasets import load_dataset
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+import argparse, json, re, sys, os, numpy as np, av, torch
+from typing import List, Dict
 from tqdm import tqdm
-from transformers import VideoLlavaForConditionalGeneration, VideoLlavaProcessor
+from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score
+import wandb
 
-import wandb  # noqa: F401 – required for auto-logging
-
-# ---------------------------------------------------------------------------
-
+LABELS = ["baby_visible", "ventilation", "stimulation", "suction"]
 PROMPT_TEMPLATE = (
     "USER: <video>\n"
     "You are an expert neonatal instructor.\n"
@@ -57,45 +63,29 @@ PROMPT_TEMPLATE = (
     "1. B, C and D can only happen if A happens.\n"
     "2. B and D are mutually exclusive.\n\n"
     "TASK → Respond ONLY with the JSON dictionary:\n"
-    '{"baby_visible":<yes/no>,"ventilation":<yes/no>,'
-    '"stimulation":<yes/no>,"suction":<yes/no>} '
+    "{\"baby_visible\":<yes/no>,\"ventilation\":<yes/no>,"
+    "\"stimulation\":<yes/no>,\"suction\":<yes/no>} "
     "ASSISTANT:"
 )
-
 MAX_NEW_TOKENS = 64
-NUM_FRAMES = 8
-_FIELDS = ["baby_visible", "ventilation", "stimulation", "suction"]
-
-# ---------------------------------------------------------------------------
-
+NUM_FRAMES     = 8
 
 def sample_frames(path: str, num_frames: int = NUM_FRAMES) -> np.ndarray:
-    """Uniformly sample exactly `num_frames` RGB24 frames from an MP4."""
+    """Uniformly sample exactly `num_frames` RGB24 frames from a video."""
     container = av.open(path)
     total = container.streams.video[0].frames
     if total < num_frames:
         raise RuntimeError(f"{path}: expected ≥{num_frames} frames, found {total}")
-    idxs = np.linspace(0, total - 1, num_frames, dtype=int)
-
-    frames: List[np.ndarray] = []
-    for i, frame in enumerate(container.decode(video=0)):
-        if i > idxs[-1]:
-            break
-        if i in idxs:
-            frames.append(frame.to_ndarray(format="rgb24"))
+    idx = np.linspace(0, total - 1, num_frames, dtype=int)
+    frames = [f.to_ndarray(format="rgb24") for i, f in enumerate(container.decode(video=0)) if i in idx]
     container.close()
-
     if len(frames) != num_frames:
-        raise RuntimeError(f"{path}: could not decode {num_frames} frames.")
+        raise RuntimeError(f"Could not decode {num_frames} frames from {path}")
     return np.stack(frames)
 
-
-_JSON_RE = re.compile(r"\{.*?\}", re.S)
-
-
-def parse_json_from_text(txt: str) -> Dict[str, str] | None:
-    """Return first JSON object found in text (or None)."""
-    m = _JSON_RE.search(txt)
+def parse_json_from_text(txt: str):
+    """Return the first JSON object found in `txt` or `None`."""
+    m = re.search(r"\{.*?\}", txt, re.S)
     if not m:
         return None
     try:
@@ -103,186 +93,148 @@ def parse_json_from_text(txt: str) -> Dict[str, str] | None:
     except Exception:
         return None
 
-
-def enforce_rules(js: dict | None) -> Dict[str, str]:
-    """Post-hoc constraint solver (matches training prompt rules)."""
-    def _empty():
-        return {
-            "baby_visible": "no",
-            "ventilation": "no",
-            "stimulation": "no",
-            "suction": "no",
-        }
+def enforce_rules(js: Dict[str, str]):
+    """Apply dependency & mutual‑exclusion rules post‑hoc."""
+    def _no():
+        return {l: "no" for l in LABELS}
 
     if not js:
-        return _empty()
+        return _no()
 
     js = {k: str(v).lower() for k, v in js.items()}
     yes = lambda v: v in {"yes", "true", "1"}
 
     if not yes(js.get("baby_visible", "no")):
-        return _empty()
+        return _no()
 
-    # mutually exclusive
     if yes(js.get("ventilation", "no")) and yes(js.get("suction", "no")):
-        js["suction"] = "no"
+        js["suction"] = "no"  # favour ventilation
 
-    for k in ("ventilation", "stimulation", "suction"):
+    for k in LABELS:
         js.setdefault(k, "no")
     return js
 
-
-def _dict2vec(d: Dict[str, str]) -> np.ndarray:
-    return np.array([1 if d[k] == "yes" else 0 for k in _FIELDS], dtype=np.int8)
-
-
-# ---------------------------------------------------------------------------
-
-
-def classify_clip(
-    model: VideoLlavaForConditionalGeneration,
-    processor: VideoLlavaProcessor,
-    video_path: str,
-    apply_rules: bool = True,
-):
+def classify_clip(model, processor, video_path: str, apply_rules: bool = True):
     frames = sample_frames(video_path)
-    inputs = processor(
-        text=PROMPT_TEMPLATE, videos=frames, return_tensors="pt", padding=True
-    ).to(model.device)
-
+    inputs = processor(text=PROMPT_TEMPLATE, videos=frames, return_tensors="pt", padding=True).to(model.device)
     with torch.no_grad():
         gen = model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS)
-
-    decoded = processor.batch_decode(gen, skip_special_tokens=True)[0]
-    js = parse_json_from_text(decoded)
+    out = processor.batch_decode(gen, skip_special_tokens=True)[0]
+    js  = parse_json_from_text(out)
     if apply_rules:
         js = enforce_rules(js)
-    return js, decoded
-
+    return js, out
 
 def load_model(model_ckpt: str):
     processor = VideoLlavaProcessor.from_pretrained(model_ckpt)
-    model = VideoLlavaForConditionalGeneration.from_pretrained(
-        model_ckpt, device_map="auto"
-    )
+    model     = VideoLlavaForConditionalGeneration.from_pretrained(model_ckpt, device_map="auto")
     model.eval()
     return model, processor
 
+def add_metric(acc, prec, rec, f1, lbl, metrics):
+    metrics[f"acc_{lbl}"] = acc
+    metrics[f"prec_{lbl}"] = prec
+    metrics[f"rec_{lbl}"]  = rec
+    metrics[f"f1_{lbl}"]   = f1
 
-# ---------------------------------------------------------------------------
+def compute_metrics(y_true: Dict[str, List[int]], y_pred: Dict[str, List[int]]):
+    metrics = {}
+    for lbl in LABELS:
+        acc = accuracy_score(y_true[lbl], y_pred[lbl])
+        p,r,f,_ = precision_recall_fscore_support(y_true[lbl], y_pred[lbl], average='binary', zero_division=0)
+        add_metric(acc,p,r,f,lbl,metrics)
+    # macro averages
+    macro_acc = np.mean([metrics[f"acc_{l}"] for l in LABELS])
+    yt = np.array([y_true[l] for l in LABELS]).T
+    yp = np.array([y_pred[l] for l in LABELS]).T
+    p_macro,r_macro,f_macro,_ = precision_recall_fscore_support(yt, yp, average='macro', zero_division=0)
+    metrics.update({
+        "acc_macro": macro_acc,
+        "prec_macro": p_macro,
+        "rec_macro": r_macro,
+        "f1_macro": f_macro,
+    })
+    return metrics
 
-
-def compute_and_log_metrics(
-    preds: Sequence[Dict[str, str]],
-    gts: Sequence[Dict[str, str]],
-    project: str,
-):
-    """Compute per-class + macro metrics and send them to W&B."""
-    y_pred = np.vstack([_dict2vec(p) for p in preds])
-    y_true = np.vstack([_dict2vec(t) for t in gts])
-
-    metrics: Dict[str, float] = {}
-    precs, recs, f1s = [], [], []
-
-    for i, fld in enumerate(_FIELDS):
-        acc = accuracy_score(y_true[:, i], y_pred[:, i])
-        prec, rec, f1, _ = precision_recall_fscore_support(
-            y_true[:, i], y_pred[:, i], average="binary", zero_division=0
-        )
-        metrics.update(
-            {
-                f"{fld}_accuracy": acc,
-                f"{fld}_precision": prec,
-                f"{fld}_recall": rec,
-                f"{fld}_f1": f1,
-            }
-        )
-        precs.append(prec)
-        recs.append(rec)
-        f1s.append(f1)
-
-    metrics["macro_precision"] = float(np.mean(precs))
-    metrics["macro_recall"] = float(np.mean(recs))
-    metrics["macro_f1"] = float(np.mean(f1s))
-
-    run = wandb.init(project=project, job_type="test")
-    wandb.log(metrics)                                               # :contentReference[oaicite:0]{index=0}
-    run.finish()
-
-
-# ---------------------------------------------------------------------------
+def print_metrics_table(metrics: Dict[str, float]):
+    """Pretty print per‑class and macro metrics."""
+    sep = "-"*66
+    print(sep)
+    print(f"| {'Label':<13}| {'Acc':>6}| {'Prec':>6}| {'Rec':>6}| {'F1':>6}|")
+    print(sep)
+    for lbl in LABELS:
+        print(f"| {lbl:<13}| {metrics[f'acc_{lbl}']:.3f}| {metrics[f'prec_{lbl}']:.3f}| {metrics[f'rec_{lbl}']:.3f}| {metrics[f'f1_{lbl}']:.3f}|")
+    print(sep)
+    print(f"| {'MACRO':<13}| {metrics['acc_macro']:.3f}| {metrics['prec_macro']:.3f}| {metrics['rec_macro']:.3f}| {metrics['f1_macro']:.3f}|")
+    print(sep)
 
 
 def main(argv: List[str]):
-    ap = argparse.ArgumentParser(
-        description="Inference tester for Video-LLaVA neonatal-resuscitation model"
-    )
+    ap = argparse.ArgumentParser(description="Inference & metrics for Video‑LLaVA neonatal model")
     ap.add_argument("--model", required=True, help="Checkpoint name or path")
-
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--video", help="Path to a single .mp4 video")
-    g.add_argument("--list", help="Text file with one video path per line")
-
-    ap.add_argument(
-        "--labels",
-        help="JSONL file with ground-truth labels (same format as training data). "
-        "If supplied, metrics are computed and logged to W&B.",
-    )
-    ap.add_argument(
-        "--project",
-        default="videollava_neoresus",
-        help="Weights & Biases project name (default: %(default)s)",
-    )
-    ap.add_argument(
-        "--no-rules", action="store_true", help="Skip rule-enforcement post-processing"
-    )
-
+    g.add_argument("--video", help="Path to a single video file (no metrics)")
+    g.add_argument("--list", help="Text file with one video path per line (no metrics)")
+    g.add_argument("--jsonl", help="HF‑style jsonl file; may contain 'labels' for metrics")
+    ap.add_argument("--out", help="Write predictions to this file (jsonl); else stdout")
+    ap.add_argument("--no_rules", action="store_true", help="Skip rule enforcement")
+    # W&B
+    ap.add_argument("--wandb_project", default=None, help="W&B project name (logs metrics)")
+    ap.add_argument("--wandb_run",     default=None, help="W&B run name")
+    ap.add_argument("--no_wandb", action="store_true", help="Disable W&B even if project is set")
     args = ap.parse_args(argv)
 
-    # ---------- load model ----------
+    wb = None
+    if args.wandb_project and not args.no_wandb:
+        wb = wandb.init(project=args.wandb_project, name=args.wandb_run, config={"model": args.model})
+
     model, processor = load_model(args.model)
 
-    # ---------- collect videos ----------
-    videos: List[str]
+    # Collect records
     if args.video:
-        videos = [args.video]
-    else:
-        videos = [v.strip() for v in open(args.list) if v.strip()]
+        records = [{"video": args.video, "labels": None}]
+    elif args.list:
+        vids = [v.strip() for v in open(args.list) if v.strip()]
+        records = [{"video": v, "labels": None} for v in vids]
+    else:  # jsonl
+        records = [json.loads(l) for l in open(args.jsonl)]
+        for r in records:
+            r.setdefault("labels", None)
 
-    # ---------- optional ground-truth ----------
-    gt_map: Dict[str, Dict[str, str]] = {}
-    if args.labels:
-        ds = load_dataset("json", data_files=args.labels, split="train")
-        gt_map = {rec["video"]: enforce_rules(rec["labels"]) for rec in ds}
+    # containers for metrics
+    y_true = {lbl: [] for lbl in LABELS}
+    y_pred = {lbl: [] for lbl in LABELS}
 
-    preds, gts = [], []
+    sink = open(args.out, "w") if args.out else sys.stdout
 
-    # ---------- inference ----------
-    for vp in tqdm(videos, desc="videos"):
+    for rec in tqdm(records, desc="clips"):
+        vp = rec["video"]
         try:
-            pred_js, raw = classify_clip(
-                model, processor, vp, apply_rules=not args.no_rules
-            )
-            print(json.dumps({"video": vp, "pred": pred_js}, ensure_ascii=False))
-
-            preds.append(pred_js)
-            if vp in gt_map:
-                gts.append(gt_map[vp])
+            pred_js, _ = classify_clip(model, processor, vp, apply_rules=not args.no_rules)
+            sink.write(json.dumps({"video": vp, "pred": pred_js}, ensure_ascii=False) + "\n")
+            # accumulate metrics if gt exists
+            if rec["labels"] is not None:
+                for lbl in LABELS:
+                    gt = int(rec["labels"].get(lbl, 0))
+                    pr = 1 if pred_js[lbl] in {"yes", "true", "1"} else 0
+                    y_true[lbl].append(gt)
+                    y_pred[lbl].append(pr)
         except Exception as e:
-            print(
-                json.dumps({"video": vp, "error": str(e)}, ensure_ascii=False),
-                file=sys.stderr,
-            )
+            sink.write(json.dumps({"video": vp, "error": str(e)}) + "\n")
+            sink.flush()
 
-    # ---------- metrics ----------
-    if args.labels and gts:
-        compute_and_log_metrics(preds, gts, project=args.project)
-    elif args.labels:
-        print(
-            "⚠️  No ground-truth entries matched the provided videos – metrics skipped.",
-            file=sys.stderr,
-        )
+    if args.out:
+        sink.close()
 
+    # Compute & log metrics if any ground truths gathered
+    if any(len(v) for v in y_true.values()):
+        metrics = compute_metrics(y_true, y_pred)
+        print_metrics_table(metrics)
+        if wb is not None:
+            wb.log(metrics)
+            wb.finish()
+    else:
+        print("No ground‑truth labels found → metrics not computed.")
 
 if __name__ == "__main__":
     main(sys.argv[1:])

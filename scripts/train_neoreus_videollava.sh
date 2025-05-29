@@ -20,6 +20,7 @@ export PYTHONPATH=./
 python src/training/train_neoresus_videollava.py   \
     --train_json data/clips/train.jsonl   \
     --valid_json data/clips/validation.jsonl   \
+    --test_json data/clips/test.jsonl   \
     --output_dir checkpoints/neoresus_lora   \
     --batch_per_gpu 1   \
     --grad_accum 4   \
