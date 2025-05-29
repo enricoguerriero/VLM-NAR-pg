@@ -37,7 +37,7 @@ def build_video_path(csv_path: str, index: int) -> str:
     naming rule), just replace the body of this function.
     """
     # Example: clips/clip_00001.mp4
-    return f"clips/clip_{index:05d}.mp4"
+    return csv_path
 
 
 def row_to_record(row: dict, index: int) -> dict:
