@@ -160,6 +160,7 @@ def main(train_json: str,
         save_strategy                = "epoch",
         eval_strategy                = "epoch",
         report_to                    = "none",
+        remove_unused_columns        = False, 
     )
 
     trainer = Trainer(model=model,
