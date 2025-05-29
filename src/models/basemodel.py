@@ -428,7 +428,10 @@ class BaseModel(nn.Module):
         for batch in tqdm(dataloader, desc="Training", unit="batch"):
             optimizer.zero_grad()
             labels = batch.pop("labels").to(self.device)
-            
+            if "file" in batch:
+                batch.pop("file")
+            if "label_names" in batch:  
+                batch.pop("label_names")
             
             with autocast(device_type='cuda'):
                 outputs = self.forward(**batch, labels = labels, loss_fct = criterion)
