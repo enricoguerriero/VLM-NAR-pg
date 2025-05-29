@@ -131,7 +131,7 @@ def main(train_json: str,
 
     processor = VideoLlavaProcessor.from_pretrained(MODEL_ID)
     model      = VideoLlavaForConditionalGeneration.from_pretrained(
-                    MODEL_ID, torch_dtype=torch.float16)# , device_map="auto")
+                    MODEL_ID, torch_dtype=torch.float16, device_map="auto")
 
     # tie weights and apply LoRA
     model.tie_weights()
