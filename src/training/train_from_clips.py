@@ -11,6 +11,7 @@ from src.utils import (
 )
 from torch.utils.data import DataLoader
 import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 from tqdm import tqdm
 import copy
