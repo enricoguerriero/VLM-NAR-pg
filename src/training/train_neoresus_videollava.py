@@ -9,6 +9,7 @@ from transformers import (VideoLlavaProcessor,
                           TrainingArguments, Trainer)
 from peft import LoraConfig, get_peft_model
 from torch.utils.data.dataloader import default_collate
+import argparse
 
 # -------------------------
 # CONFIG (edit here)
@@ -50,6 +51,7 @@ def sample_frames(container: av.container.input.InputContainer,
             frames.append(f.to_ndarray(format="rgb24"))
     assert len(frames) == num_frames, "could not decode enough frames"
     return np.stack(frames)
+
 
 def labels_to_json(lbl: Dict[str,int]) -> str:
     yesno = lambda b: "yes" if b else "no"
@@ -95,7 +97,6 @@ class VideoSFTCollator:
                                   return_tensors="pt",
                                   padding=True)
         # Append answer after prompt and build training labels
-        # (following SFT convention: mask the prompt, keep the answer)
         input_ids, attention_mask, labels = [], [], []
         for i in range(len(texts)):
             full = texts[i] + " " + answers[i]
@@ -103,64 +104,61 @@ class VideoSFTCollator:
                                   return_tensors="pt")
             inp, att = enc["input_ids"], enc["attention_mask"]
             lab = inp.clone()
-            # Prompt part → -100 (ignored loss)
             prompt_len = len(self.processor.tokenizer(texts[i]).input_ids)
             lab[0, :prompt_len] = -100
             input_ids.append(inp[0]); attention_mask.append(att[0]); labels.append(lab[0])
 
-        batch_out = {
+        return {
             "input_ids":       torch.stack(input_ids),
             "attention_mask":  torch.stack(attention_mask),
             "labels":          torch.stack(labels),
             "videos":          torch.stack([torch.from_numpy(v) for v in videos]),
         }
-        return batch_out
 
 # -------------------------
 # Training entry-point
 # -------------------------
-def main(train_json="data/train.jsonl",
-         valid_json="data/valid.jsonl",
-         output_dir="runs/videollava_neoresus",
-         batch_per_gpu=1,
-         grad_accum=4,
-         lr=1e-4,
-         epochs=3,
-         lora_r=16,
-         lora_alpha=32,
-         lora_dropout=0.05):
+def main(train_json: str,
+         valid_json: str,
+         output_dir: str,
+         batch_per_gpu: int,
+         grad_accum: int,
+         lr: float,
+         epochs: int,
+         lora_r: int,
+         lora_alpha: int,
+         lora_dropout: float):
 
-    processor = VideoLlavaProcessor.from_pretrained(MODEL_ID)  # :contentReference[oaicite:0]{index=0}
+    processor = VideoLlavaProcessor.from_pretrained(MODEL_ID)
     model      = VideoLlavaForConditionalGeneration.from_pretrained(
                     MODEL_ID, torch_dtype=torch.float16, device_map="auto")
 
-    # LoRA adapter on all linear layers of the text projector
+    # tie weights and apply LoRA
+    model.tie_weights()
     lora = LoraConfig(r=lora_r, lora_alpha=lora_alpha,
                       target_modules=["q_proj", "v_proj"],
                       lora_dropout=lora_dropout,
                       task_type="CAUSAL_LM")
-    model = get_peft_model(model, lora)                       # :contentReference[oaicite:1]{index=1}
+    model = get_peft_model(model, lora)
 
-    # HF Datasets
+    # Load datasets
     train_ds = load_split(train_json)
     valid_ds = load_split(valid_json)
 
-    # Data collator
     collator = VideoSFTCollator(processor, NUM_FRAMES)
 
-    # Trainer
     args = TrainingArguments(
-        output_dir          = output_dir,
-        per_device_train_batch_size = batch_per_gpu,
-        per_device_eval_batch_size  = 1,
-        gradient_accumulation_steps = grad_accum,
-        num_train_epochs    = epochs,
-        learning_rate       = lr,
-        fp16                = True,
-        logging_steps       = 20,
-        save_strategy       = "epoch",
-        evaluation_strategy = "epoch",
-        report_to           = "none",
+        output_dir                   = output_dir,
+        per_device_train_batch_size  = batch_per_gpu,
+        per_device_eval_batch_size   = 1,
+        gradient_accumulation_steps  = grad_accum,
+        num_train_epochs             = epochs,
+        learning_rate                = lr,
+        fp16                         = True,
+        logging_steps                = 20,
+        save_strategy                = "epoch",
+        evaluation_strategy          = "epoch",
+        report_to                    = "none",
     )
 
     trainer = Trainer(model=model,
@@ -174,4 +172,18 @@ def main(train_json="data/train.jsonl",
     processor.save_pretrained(output_dir)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Train VideoLLaVA on neonatal resuscitation events.")
+    parser.add_argument("--train_json", type=str, default="data/clips/train.jsonl")
+    parser.add_argument("--valid_json", type=str, default="data/clips/validation.jsonl")
+    parser.add_argument("--output_dir", type=str, default="runs/videollava_neoresus")
+    parser.add_argument("--batch_per_gpu", type=int, default=1)
+    parser.add_argument("--grad_accum", type=int, default=4)
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--lora_r", type=int, default=16)
+    parser.add_argument("--lora_alpha", type=int, default=32)
+    parser.add_argument("--lora_dropout", type=float, default=0.05)
+    args = parser.parse_args()
+    main(args.train_json, args.valid_json, args.output_dir,
+         args.batch_per_gpu, args.grad_accum, args.lr,
+         args.epochs, args.lora_r, args.lora_alpha, args.lora_dropout)
