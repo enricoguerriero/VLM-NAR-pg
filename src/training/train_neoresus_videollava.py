@@ -82,6 +82,7 @@ class VideoSFTCollator:
     def __call__(self, batch):
         # read video & build prompt/answer
         videos, texts, answers = [], [], []
+        print(f"Batch: {batch}", flush=True)
         for item in batch:
             clip_path = item["video"]
             container = av.open(clip_path)
