@@ -39,7 +39,7 @@ class VLMVideoMultiLabelDataset(Dataset):
         Returns
         -------
         pos_weight : torch.Tensor, shape (4,)
-            (n_neg / n_pos) for each class – ready for BCEWithLogitsLoss.
+            (n_neg / n_pos) for each class - ready for BCEWithLogitsLoss.
         prior      : torch.Tensor, shape (4,)
             Empirical P(label == 1) for each class.
         """

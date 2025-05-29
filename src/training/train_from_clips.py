@@ -49,20 +49,21 @@ def main():
     logger.info("Model loaded.")
 
     # ─── Datasets ────────────────────────────────────────────────────────────────
+    prompt = model.prompt_definition(config["prompt"], config["system_message"])
     logger.info("Loading datasets...")
     train_ds = VLMVideoMultiLabelDataset(
         csv_file = config["train_csv"],
         processor = model.processor,
-        prompt = config["prompt"],
-        system_message = config["system_message"],
+        prompt = prompt,
+        # system_message = config["system_message"],
         frames = config["frames"],
         frame_sample = config["frame_sample"],
     )
     validation_ds = VLMVideoMultiLabelDataset(
         csv_file = config["validation_csv"],
         processor = model.processor,
-        prompt = config["prompt"],
-        system_message = config["system_message"],
+        prompt = prompt,
+        # system_message = config["system_message"],
         frames = config["frames"],
         frame_sample = config["frame_sample"],
     )
