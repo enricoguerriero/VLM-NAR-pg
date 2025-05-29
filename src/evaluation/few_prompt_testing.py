@@ -21,8 +21,8 @@ MODEL_JUDGE   = "mistralai/Mistral-7B-Instruct-v0.1"           # text judge
 NUM_SAMPLES   = 40
 SEED          = 42
 DEVICE = "cuda" # for slurm
-CAPTION_DEVICE = "cuda:1" 
-JUDGE_DEVICE   = "cuda:5" 
+CAPTION_DEVICE = torch.device("cuda:1") 
+JUDGE_DEVICE   = torch.device("cuda:5")
 
 PROMPTS = [
 		# Baby visible (real baby vs. mannequin)
@@ -114,7 +114,7 @@ def main():
 		# ── Load caption model (producer) ───────────────────────────────────────
 		caption_model = load_model(MODEL_CAPTION, checkpoint=None)
 		# caption_model.to(device).eval() # slurm 
-		caption_model.to(torch.device(CAPTION_DEVICE)).eval() 
+		caption_model.to(CAPTION_DEVICE).eval() 
 		caption_processor = caption_model.processor
 
 		# ── Build dataset (each row = one (clip, prompt) pair) ─────────────────
@@ -141,7 +141,7 @@ def main():
 		judge_tok  = AutoTokenizer.from_pretrained(MODEL_JUDGE)
 		judge_lm   = AutoModelForCausalLM.from_pretrained(
 				MODEL_JUDGE,
-				device_map={"": JUDGE_DEVICE},
+				device_map={"": JUDGE_DEVICE.index},
 				torch_dtype=torch.float16,
 		)
 		judge_lm.eval()
@@ -149,7 +149,7 @@ def main():
 				model = judge_lm,
 				tokenizer = judge_tok,
 				task = "text-generation",
-				device = JUDGE_DEVICE,
+				device = JUDGE_DEVICE.index,
 				pad_token_id = judge_tok.eos_token_id,
 				return_full_text = False,
 				clean_up_tokenization_spaces = True,
