@@ -20,7 +20,7 @@ MODEL_CAPTION = "LLaVANeXT"                                    # producer VLM
 MODEL_JUDGE   = "mistralai/Mistral-7B-Instruct-v0.1"           # text judge
 NUM_SAMPLES   = 40
 SEED          = 42
-DEVICE = "cuda:1"
+DEVICE = "cuda:0"
 
 PROMPTS = [
 		# Baby visible (real baby vs. mannequin)
@@ -159,55 +159,55 @@ def main():
 
 		results = []
 		for local_idx, sample in enumerate(subset):
-				ds_idx = subset.indices[local_idx]
+			ds_idx = subset.indices[local_idx]
 
-				# — ground-truth scalar (0./1.) —
-				true_label  = float(sample["label"].item())
-				label_name  = sample["label_name"]
-				class_idx   = label2idx[label_name]
+			# — ground-truth scalar (0./1.) —
+			true_label  = float(sample["label"].item())
+			label_name  = sample["label_name"]
+			class_idx   = label2idx[label_name]
 
-				# — caption model inputs —
-				cap_inputs = {
-						"input_ids": sample["input_ids"].unsqueeze(0).to(device),
-						"attention_mask": sample["attention_mask"].unsqueeze(0).to(device),
-				}
-				# detect video / image key
-				vid_key = "pixel_values_videos" if "pixel_values_videos" in sample else "pixel_values"
-				cap_inputs[vid_key] = sample[vid_key].unsqueeze(0).to(device)
+			# — caption model inputs —
+			cap_inputs = {
+					"input_ids": sample["input_ids"].unsqueeze(0).to(device),
+					"attention_mask": sample["attention_mask"].unsqueeze(0).to(device),
+			}
+			# detect video / image key
+			vid_key = "pixel_values_videos" if "pixel_values_videos" in sample else "pixel_values"
+			cap_inputs[vid_key] = sample[vid_key].unsqueeze(0).to(device)
 
-				# — generate caption —
-				with torch.no_grad():
-						caption = caption_model.generate_answer(
-								inputs = cap_inputs,
-								max_new_tokens = 128,
-								do_sample = False,
-						).strip()
+			# — generate caption —
+			with torch.no_grad():
+					caption = caption_model.generate_answer(
+							inputs = cap_inputs,
+							max_new_tokens = 128,
+							do_sample = False,
+					).strip()
 
-				# — build judge prompt —
-				judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
+			# — build judge prompt —
+			judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
 
-				# — run judge LLM —
-				judge_raw = judge_pipe(
-						judge_prompt,
-						max_new_tokens = 15,
-						do_sample = False,
-				)[0]["generated_text"].strip().lower()
-				match = re.search(r"\b(yes|no)\b", judge_raw)
-				pred = match.group(1) == "yes" if match else False
+			# — run judge LLM —
+			judge_raw = judge_pipe(
+					judge_prompt,
+					max_new_tokens = 15,
+					do_sample = False,
+			)[0]["generated_text"].strip().lower()
+			match = re.search(r"\b(yes|no)\b", judge_raw)
+			pred = match.group(1) == "yes" if match else False
 
-				# — log result —
-				rec = dict(
-						dataset_idx = ds_idx,
-						file        = sample["file"],
-						class_idx   = class_idx,
-						class_name  = label_name,
-						caption     = caption,
-						true_label  = true_label,
-						judge_raw   = judge_raw,
-						prediction  = pred,
-				)
-				print(json.dumps(rec, ensure_ascii=False, indent=2), flush=True)
-				results.append(rec)
+			# — log result —
+			rec = dict(
+					dataset_idx = ds_idx,
+					file        = sample["file"],
+					class_idx   = class_idx,
+					class_name  = label_name,
+					caption     = caption,
+					true_label  = true_label,
+					judge_raw   = judge_raw,
+					prediction  = pred,
+			)
+			print(json.dumps(rec, ensure_ascii=False, indent=2), flush=True)
+			results.append(rec)
 
 		# ── Save JSON ───────────────────────────────────────────────────────────
 		with open("few_shot_results_vlm.json", "w", encoding="utf-8") as f:
