@@ -149,7 +149,6 @@ def main():
 				model = judge_lm,
 				tokenizer = judge_tok,
 				task = "text-generation",
-				device = JUDGE_DEVICE.index,
 				pad_token_id = judge_tok.eos_token_id,
 				return_full_text = False,
 				clean_up_tokenization_spaces = True,
