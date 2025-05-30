@@ -153,7 +153,7 @@ def main():
     y_pred = {lbl: [] for lbl in label_names}
 
     for sample in tqdm(samples, desc="Evaluating", unit="clip"):
-        print(f"\n[VIDEO] {sample['video']}")
+        print(f"\n[VIDEO] {sample['video']}", flush=True)
         video = _read_video_pyav(sample["video"], args.num_frames)
 
         for lbl in label_names:
@@ -161,11 +161,11 @@ def main():
             gt = sample["labels"][lbl]
             y_pred[lbl].append(pred)
             y_true[lbl].append(sample["labels"][lbl])
-            print(f"  {lbl:15s} | GT: {gt} | Pred: {pred}")
+            print(f"  {lbl:15s} | GT: {gt} | Pred: {pred}", flush=True)
 
 
     # Metrics ---------------------------------------------------------------
-    print("\n===== Per‑class metrics =====")
+    print("\n===== Per‑class metrics =====", flush=True)
     macro_prec, macro_rec, macro_f1 = [], [], []
     for lbl in label_names:
         acc = accuracy_score(y_true[lbl], y_pred[lbl])
@@ -175,12 +175,12 @@ def main():
         macro_prec.append(prec)
         macro_rec.append(rec)
         macro_f1.append(f1)
-        print(f"{lbl:15s}  acc={acc:5.3f}  prec={prec:5.3f}  rec={rec:5.3f}  f1={f1:5.3f}")
+        print(f"{lbl:15s}  acc={acc:5.3f}  prec={prec:5.3f}  rec={rec:5.3f}  f1={f1:5.3f}", flush=True)
 
-    print("\n===== Macro‑average =====")
+    print("\n===== Macro‑average =====", flush=True)
     print(
         f"acc={np.mean([accuracy_score(y_true[l], y_pred[l]) for l in label_names]):5.3f}  "  # over labels
-        f"prec={np.mean(macro_prec):5.3f}  rec={np.mean(macro_rec):5.3f}  f1={np.mean(macro_f1):5.3f}"
+        f"prec={np.mean(macro_prec):5.3f}  rec={np.mean(macro_rec):5.3f}  f1={np.mean(macro_f1):5.3f}", flush=True
     )
 
 
