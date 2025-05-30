@@ -19,5 +19,6 @@ export PYTHONPATH=./
 
 python src/evaluation/test_videollava_per_class.py \
         --jsonl data/clips/test_balanced.jsonl \
-        --model LanguageBind/Video-LLaVA-7B-hf \
+        --model LanguageBind/Video-LLaVA-7B-hf 
+        
 echo "--- THE END ---"
