@@ -157,6 +157,7 @@ def main():
 
         for lbl in label_names:
             pred = predict_binary(model, processor, video, prompts[lbl], device)
+            pred = pred.split("ASSISTANT:")[-1].strip()
             gt = sample["labels"][lbl]
             y_pred[lbl].append(pred)
             y_true[lbl].append(sample["labels"][lbl])
