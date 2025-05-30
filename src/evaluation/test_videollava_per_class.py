@@ -177,7 +177,6 @@ def main() -> None:
         with open(args.prompts, "r", encoding="utf-8") as f:
             prompts: Dict[str, str] = json.load(f)
     else:
-        # hard-coded neonatal-resus prompts used in original script
         prompts = {
             "baby_visible": (
                 "You are in a simulation of a newborn resuscitation. The camera is on "
