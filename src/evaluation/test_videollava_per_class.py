@@ -88,7 +88,7 @@ def _default_prompt(label: str) -> str:
     )
 
 
-def build_conversation(prompt: str) -> List[Dict]:
+def build_conversation(prompt: str) -> str:
     """
     Build a single-turn multimodal chat in Video-LLaVA format.
 
@@ -168,11 +168,13 @@ def main() -> None:
 
     prompts = {
         "baby_visible": (
-            "You are in a simulation of a newborn resuscitation. The camera is on "
-            "a table, where there can or cannot be a baby or a mannequin representing "
-            "a baby. If you see a subject representing a baby on the table, reply "
-            "with 1; if the table is empty reply with 0. Be sure to only reply "
-            "with 0 or 1, nothing else."
+            "Is there a baby mannequin on the table? "
+            "Reply with 1 for Yes, 0 for No - just the digit."
+            # "You are in a simulation of a newborn resuscitation. The camera is on "
+            # "a table, where there can or cannot be a baby or a mannequin representing "
+            # "a baby. If you see a subject representing a baby on the table, reply "
+            # "with 1; if the table is empty reply with 0. Be sure to only reply "
+            # "with 0 or 1, nothing else."
         ),
         "ventilation": (
             "You are in a simulation of a newborn resuscitation. The camera is on "
