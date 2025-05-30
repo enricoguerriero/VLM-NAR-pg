@@ -95,15 +95,7 @@ def build_conversation(prompt: str) -> List[Dict]:
     apply_chat_template then converts this to:
         USER: <video>\n<prompt> ASSISTANT:
     """
-    return [
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt},
-                {"type": "video"},
-            ],
-        }
-    ]
+    return "USER: <video>\n" + prompt + " ASSISTANT:"
 
 
 # ---------- Single prompt inference --------------------------------------- #
@@ -117,8 +109,8 @@ def predict_binary(
     max_new_tokens: int = 4,
 ) -> int:
     conv = build_conversation(prompt)
-    prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
-    inputs = processor(text=prompt_text, videos=video, return_tensors="pt").to(device)
+    # prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
+    inputs = processor(text=conv, videos=video, return_tensors="pt").to(device)
 
     out = model.generate(**inputs, max_new_tokens=max_new_tokens)
     decoded = processor.batch_decode(
@@ -173,41 +165,35 @@ def main() -> None:
     label_names = list(samples[0]["labels"].keys())
 
     # ---------- Build prompts --------------------------------------------- #
-    if args.prompts:
-        with open(args.prompts, "r", encoding="utf-8") as f:
-            prompts: Dict[str, str] = json.load(f)
-    else:
-        prompts = {
-            "baby_visible": (
-                "You are in a simulation of a newborn resuscitation. The camera is on "
-                "a table, where there can or cannot be a baby or a mannequin representing "
-                "a baby. If you see a subject representing a baby on the table, reply "
-                "with 1; if the table is empty reply with 0. Be sure to only reply "
-                "with 0 or 1, nothing else."
-            ),
-            "ventilation": (
-                "You are in a simulation of a newborn resuscitation. The camera is on "
-                "a table, where there can or cannot be a baby or a mannequin. If the "
-                "baby/mannequin receives ventilation via a mask, reply with 1; "
-                "otherwise reply with 0 (also reply 0 if no baby is visible). "
-                "Answer only 0 or 1."
-            ),
-            "stimulation": (
-                "You are in a simulation of a newborn resuscitation. The camera is on "
-                "a table, where there can or cannot be a baby or a mannequin. If the "
-                "baby/mannequin receives stimulation (rubbing the back, nates, or trunk), "
-                "reply 1; otherwise 0 (or 0 if no baby visible). Answer only 0 or 1."
-            ),
-            "suction": (
-                "You are in a simulation of a newborn resuscitation. The camera is on "
-                "a table, where there can or cannot be a baby or a mannequin. If the "
-                "baby/mannequin receives suctioning with a catheter, reply 1; otherwise "
-                "0 (or 0 if no baby visible). Answer only 0 or 1."
-            ),
-        }
-        # fill in any missing prompts with generic versions
-        for lbl in label_names:
-            prompts.setdefault(lbl, _default_prompt(lbl))
+
+    prompts = {
+        "baby_visible": (
+            "You are in a simulation of a newborn resuscitation. The camera is on "
+            "a table, where there can or cannot be a baby or a mannequin representing "
+            "a baby. If you see a subject representing a baby on the table, reply "
+            "with 1; if the table is empty reply with 0. Be sure to only reply "
+            "with 0 or 1, nothing else."
+        ),
+        "ventilation": (
+            "You are in a simulation of a newborn resuscitation. The camera is on "
+            "a table, where there can or cannot be a baby or a mannequin. If the "
+            "baby/mannequin receives ventilation via a mask, reply with 1; "
+            "otherwise reply with 0 (also reply 0 if no baby is visible). "
+            "Answer only 0 or 1."
+        ),
+        "stimulation": (
+            "You are in a simulation of a newborn resuscitation. The camera is on "
+            "a table, where there can or cannot be a baby or a mannequin. If the "
+            "baby/mannequin receives stimulation (rubbing the back, nates, or trunk), "
+            "reply 1; otherwise 0 (or 0 if no baby visible). Answer only 0 or 1."
+        ),
+        "suction": (
+            "You are in a simulation of a newborn resuscitation. The camera is on "
+            "a table, where there can or cannot be a baby or a mannequin. If the "
+            "baby/mannequin receives suctioning with a catheter, reply 1; otherwise "
+            "0 (or 0 if no baby visible). Answer only 0 or 1."
+        ),
+    }
 
     # ---------- Model & processor ----------------------------------------- #
     dtype = torch.float16 if args.half else torch.float32
