@@ -178,23 +178,13 @@ def main() -> None:
             # "with 0 or 1, nothing else."
         ),
         "ventilation": (
-            "You are in a simulation of a newborn resuscitation. The camera is on "
-            "a table, where there can or cannot be a baby or a mannequin. If the "
-            "baby/mannequin receives ventilation via a mask, reply with 1; "
-            "otherwise reply with 0 (also reply 0 if no baby is visible). "
-            "Answer only 0 or 1."
+            "Is anyone holding a ventilation mask over the baby's doll face? 1 for Yes, 0 for No. "
         ),
         "stimulation": (
-            "You are in a simulation of a newborn resuscitation. The camera is on "
-            "a table, where there can or cannot be a baby or a mannequin. If the "
-            "baby/mannequin receives stimulation (rubbing the back, nates, or trunk), "
-            "reply 1; otherwise 0 (or 0 if no baby visible). Answer only 0 or 1."
+            "Is the baby being stimulated by someone? 1 for Yes, 0 for No. "
         ),
         "suction": (
-            "You are in a simulation of a newborn resuscitation. The camera is on "
-            "a table, where there can or cannot be a baby or a mannequin. If the "
-            "baby/mannequin receives suctioning with a catheter, reply 1; otherwise "
-            "0 (or 0 if no baby visible). Answer only 0 or 1."
+            "Has the baby a thin suction tube inside his mouth or nose? 1 for Yes, 0 for No. "
         ),
     }
 
