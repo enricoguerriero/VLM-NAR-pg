@@ -106,7 +106,7 @@ def predict_binary(
     video: np.ndarray,
     prompt: str,
     device: torch.device,
-    max_new_tokens: int = 4,
+    max_new_tokens: int = 20,
 ) -> int:
     conv = build_conversation(prompt)
     # prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
