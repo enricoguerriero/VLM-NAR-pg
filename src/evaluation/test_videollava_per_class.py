@@ -168,9 +168,7 @@ def main() -> None:
 
     prompts = {
         "baby_visible": (
-            # "Is there a baby mannequin on the table? "
-            # "Reply with 1 for Yes, 0 for No - just the digit."
-            "Describe what you see on the table. "
+            "Is there a baby doll on the table? 1 for Yes, 0 for No. "
             # "You are in a simulation of a newborn resuscitation. The camera is on "
             # "a table, where there can or cannot be a baby or a mannequin representing "
             # "a baby. If you see a subject representing a baby on the table, reply "
