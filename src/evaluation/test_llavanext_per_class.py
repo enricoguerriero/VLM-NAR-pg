@@ -103,6 +103,7 @@ def predict_binary(
 
     out = model.generate(**inputs, max_new_tokens=max_new_tokens)
     decoded = processor.batch_decode(out, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
+    print(f"Response: {decoded}")
     # Find first explicit 0/1
     for ch in decoded:
         if ch in {"0", "1"}:
@@ -130,12 +131,13 @@ def main():
     label_names = list(samples[0]["labels"].keys())
 
     # Build prompts
-    if args.prompts:
-        with open(args.prompts, "r", encoding="utf-8") as fp:
-            custom = json.load(fp)
-        prompts = {lbl: custom.get(lbl, _default_prompt(lbl)) for lbl in label_names}
-    else:
-        prompts = {lbl: _default_prompt(lbl) for lbl in label_names}
+    prompts = {
+        "Baby visible": "You are in a simulation of a newborn resuscitation. The camera is on a table, where there can or can not be a baby or a mannequin representing a baby. If you see a baby or a mannequin / doll representing a baby on the table, reply with 1, if you see just the empty table reply with 0. Be sure to only reply with 0 or 1, nothing else.",
+        "Ventilation": "You are in a simulation of a newborn resuscitation. The camera is on a table, where there can or can not be a baby or a mannequin representing a baby. If you see the baby or the mannequin /doll representing a baby receiving ventilation with a ventilation mask over its face, reply with 1, if you see the baby or the mannequin / doll not receiving ventilation, reply with 0, if you don't see the baby reply with 0. Be sure to only reply with 0 or 1, nothing else.",
+        "Stimulation": "You are in a simulation of a newborn resuscitation. The camera is on a table, where there can or can not be a baby or a mannequin representing a baby. If you see the baby or the mannequin / doll representing a baby receiving stimulation (rubbing the back nates or on the trunk), reply with 1, if you see the baby or the mannequin / doll not receiving stimulation, reply with 0, if you don't see the baby reply with 0. Be sure to only reply with 0 or 1, nothing else.",
+        "Suction": "You are in a simulation of a newborn resuscitation. The camera is on a table, where there can or can not be a baby or a mannequin representing a baby. If you see the baby or the mannequin / doll representing a baby receiving suctioning (with a suction catheter), reply with 1, if you see the baby or the mannequin / doll not receiving suctioning, reply with 0, if you don't see the baby reply with 0. Be sure to only reply with 0 or 1, nothing else."
+    }
+
 
     # Model / processor
     dtype = torch.float16 if args.half else torch.float32
@@ -150,12 +152,16 @@ def main():
     y_pred = {lbl: [] for lbl in label_names}
 
     for sample in tqdm(samples, desc="Evaluating", unit="clip"):
+        print(f"\n[VIDEO] {sample['video']}")
         video = _read_video_pyav(sample["video"], args.num_frames)
 
         for lbl in label_names:
             pred = predict_binary(model, processor, video, prompts[lbl], device)
+            gt = sample["labels"][lbl]
             y_pred[lbl].append(pred)
             y_true[lbl].append(sample["labels"][lbl])
+            print(f"  {lbl:15s} | GT: {gt} | Pred: {pred}")
+
 
     # Metrics ---------------------------------------------------------------
     print("\n===== Per‑class metrics =====")
