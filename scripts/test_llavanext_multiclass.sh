@@ -19,6 +19,6 @@ export PYTHONPATH=./
 
 python src/evaluation/test_llavanext_per_class.py \
         --jsonl data/clips/test.jsonl \
-        --model_name llava-hf/LLaVA-NeXT-Video-7B-hf \
+        --model llava-hf/LLaVA-NeXT-Video-7B-hf \
         --prompts prompts.json 
 echo "--- THE END ---"
