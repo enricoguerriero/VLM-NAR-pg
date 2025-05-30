@@ -13,6 +13,7 @@ from pathlib import Path
 
 LABELS           = ["baby_visible", "ventilation", "stimulation", "suction"]
 TARGET_PER_LABEL = 50          # 40 examples ÷ 4 labels
+NEGATIVES = 10
 
 def load_jsonl(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -23,11 +24,13 @@ def write_jsonl(records, path):
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
-def balanced_sample(records, labels, target_per_label, seed=42):
+def balanced_sample(records, labels, target_per_label, negatives, seed=42):
     random.seed(seed)
     # index positives for each label
     positives = {lbl: [i for i, r in enumerate(records) if r["labels"][lbl]==1]
                  for lbl in labels}
+    all_negatives = [i for i, r in enumerate(records)
+                     if all(r["labels"][lbl] == 0 for lbl in labels)]
 
     selected = set()
     # round-robin selection so we avoid bias toward any label
@@ -45,6 +48,9 @@ def balanced_sample(records, labels, target_per_label, seed=42):
             selected.update(pool[:need])
             if len(selected) >= target_per_label*len(labels):  # reached 40
                 break
+    if all_negatives:
+        random.shuffle(all_negatives)
+        selected.update(all_negatives[:negatives])
 
     # If we overshot a little, trim down to exactly 40 examples
     selected = list(selected)[:target_per_label*len(labels)]
@@ -52,7 +58,7 @@ def balanced_sample(records, labels, target_per_label, seed=42):
 
 def main(in_path: Path, out_path: Path):
     records  = load_jsonl(in_path)
-    sample   = balanced_sample(records, LABELS, TARGET_PER_LABEL)
+    sample   = balanced_sample(records, LABELS, TARGET_PER_LABEL, NEGATIVES)
     write_jsonl(sample, out_path)
 
     # quick sanity check
