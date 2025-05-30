@@ -119,14 +119,12 @@ def predict_binary(
     print(f"Response: {decoded}")
     answer = decoded.split("ASSISTANT:")[-1].strip().lower()
     # Return the first explicit 0/1 the model outputs
-    for ch in answer:
-        if ch in {"0", "1"}:
-            return int(ch)
-        elif ch in {"yes", "true", "1"}:
-            return 1
-        elif ch in {"no", "false", "0"}:
-            return 0
-    return 0  # fallback if the model refuses / hallucinates
+    if answer.startswith("1") or answer.startswith("yes") or answer.startswith("true"):
+        return 1
+    elif answer.startswith("0") or answer.startswith("no") or answer.startswith("false"):
+        return 0
+
+    return 0  # fallback
 
 
 # ---------- Main ----------------------------------------------------------- #
