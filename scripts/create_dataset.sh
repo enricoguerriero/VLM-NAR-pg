@@ -15,8 +15,8 @@ source activate NewbornEnv
 echo "virtual environment activated"
 
 export PYTHONPATH=./
-python src/data/build_resus_dataset.py \
-    --root "data/clips/test" \
-    --out "data/clips/test/labels.csv" \
+python src/data/balance_jsonl.py \
+    --input data/clips/test.jsonl \
+    --output data/clips/test_balanced.jsonl 
 
 echo "--- THE END ---"
