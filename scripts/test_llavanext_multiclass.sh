@@ -18,7 +18,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
 
 python src/evaluation/test_llavanext_per_class.py \
-        --jsonl data/clips/test_balanced.jsonl \
+        --jsonl data/clips/test.jsonl \
         --model llava-hf/LLaVA-NeXT-Video-7B-hf \
         --prompts prompts.json 
 echo "--- THE END ---"
