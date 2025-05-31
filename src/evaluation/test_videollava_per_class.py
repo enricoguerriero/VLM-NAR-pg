@@ -95,13 +95,7 @@ def build_conversation(prompt: str) -> str:
     apply_chat_template then converts this to:
         USER: <video>\n<prompt> ASSISTANT:
     """
-    return {
-        "role": "user",
-        "content": [
-            {"type": "text", "text": prompt},
-            {"type": "video"},
-        ],
-    }
+    return f"USER: {prompt}\n<video>\nASSISTANT:"
 
 
 # ---------- Single prompt inference --------------------------------------- #
@@ -112,11 +106,11 @@ def predict_binary(
     video: np.ndarray,
     prompt: str,
     device: torch.device,
-    max_new_tokens: int = 20,
+    max_new_tokens: int = 50,
 ) -> int:
     conv = build_conversation(prompt)
-    prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
-    inputs = processor(text=prompt_text, videos=video, return_tensors="pt").to(device)
+    # prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
+    inputs = processor(text=conv, videos=video, return_tensors="pt").to(device)
 
     out = model.generate(**inputs, max_new_tokens=max_new_tokens)
     decoded = processor.batch_decode(
@@ -176,7 +170,7 @@ def main() -> None:
 
     prompts = {
         "baby_visible": (
-            "Is there a baby doll on the table? 1 for Yes, 0 for No. "
+            "Is there a baby doll on the table? 1 for Yes, 0 for No; then describe the scene. "
             # "You are in a simulation of a newborn resuscitation. The camera is on "
             # "a table, where there can or cannot be a baby or a mannequin representing "
             # "a baby. If you see a subject representing a baby on the table, reply "
@@ -184,13 +178,13 @@ def main() -> None:
             # "with 0 or 1, nothing else."
         ),
         "ventilation": (
-            "Is anyone holding a ventilation mask that cover the baby's doll face? 1 for Yes, 0 for No. "
+            "Is anyone holding a ventilation mask that cover the baby's doll face? 1 for Yes, 0 for No; then describe the scene. "
         ),
         "stimulation": (
-            "Is the baby being stimulated by someone rubbing his back, nates or trunk? 1 for Yes, 0 for No. "
+            "Is the baby being stimulated by someone rubbing his back, nates or trunk? 1 for Yes, 0 for No; then describe the scene. "
         ),
         "suction": (
-            "Has the baby a thin suction tube inside his mouth or nose? 1 for Yes, 0 for No. "
+            "Has the baby a thin suction tube inside his mouth or nose? 1 for Yes, 0 for No; then describe the scene. "
         ),
     }
 
