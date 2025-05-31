@@ -198,7 +198,7 @@ def main() -> None:
     processor = VideoLlavaProcessor.from_pretrained(args.model)
     processor.tokenizer.padding_side = "left"
     model.eval()
-    processor.chat_template = model.config.chat_template
+    # processor.chat_template = model.config.chat_template
 
     # ---------- Prediction loop ------------------------------------------- #
     y_true = {lbl: [] for lbl in label_names}
