@@ -136,16 +136,16 @@ def main():
     # Build prompts
     prompts = {
         "baby_visible": (
-            "Is there a baby doll on the table? 1 for Yes, 0 for No; then describe the scene. "
+            "Is there a baby doll on the table? Answer with 1 for Yes if you are sure, 0 for No."
         ),
         "ventilation": (
-            "Is anyone holding a ventilation mask that cover the baby's doll face? 1 for Yes, 0 for No; then describe the scene. "
+            "Is anyone holding a ventilation mask that cover the baby's doll face? Answer with 1 for Yes if you are sure, 0 for No."
         ),
         "stimulation": (
-            "Is the baby being stimulated by someone rubbing his back, nates or trunk? 1 for Yes, 0 for No; then describe the scene. "
+            "Is the baby being stimulated by someone rubbing his back, nates or trunk? Answer with 1 for Yes if you are sure, 0 for No."
         ),
         "suction": (
-            "Has the baby a thin suction tube inside his mouth or nose? 1 for Yes, 0 for No; then describe the scene. "
+            "Has the baby a thin suction tube inside his mouth or nose? Answer with 1 for Yes if you are sure, 0 for No."
         ),
     }
 
