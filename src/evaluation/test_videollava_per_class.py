@@ -178,10 +178,10 @@ def main() -> None:
             # "with 0 or 1, nothing else."
         ),
         "ventilation": (
-            "Is anyone holding a ventilation mask over the baby's doll face? 1 for Yes, 0 for No. "
+            "Is anyone holding a ventilation mask that cover the baby's doll face? 1 for Yes, 0 for No. "
         ),
         "stimulation": (
-            "Is the baby being stimulated by someone? 1 for Yes, 0 for No. "
+            "Is the baby being stimulated by someone rubbing his back, nates or trunk? 1 for Yes, 0 for No. "
         ),
         "suction": (
             "Has the baby a thin suction tube inside his mouth or nose? 1 for Yes, 0 for No. "
