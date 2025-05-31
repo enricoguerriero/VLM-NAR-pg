@@ -141,7 +141,7 @@ def main():
 		judge_tok  = AutoTokenizer.from_pretrained(MODEL_JUDGE)
 		judge_lm   = AutoModelForCausalLM.from_pretrained(
 				MODEL_JUDGE,
-				device_map={"": JUDGE_DEVICE.index},
+				device_map="cuda",
 				torch_dtype=torch.float16,
 		)
 		judge_lm.eval()
