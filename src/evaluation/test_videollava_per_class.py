@@ -95,7 +95,13 @@ def build_conversation(prompt: str) -> str:
     apply_chat_template then converts this to:
         USER: <video>\n<prompt> ASSISTANT:
     """
-    return "USER: <video>\n" + prompt + " ASSISTANT:"
+    return {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": prompt},
+            {"type": "video"},
+        ],
+    }
 
 
 # ---------- Single prompt inference --------------------------------------- #
@@ -109,8 +115,8 @@ def predict_binary(
     max_new_tokens: int = 20,
 ) -> int:
     conv = build_conversation(prompt)
-    # prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
-    inputs = processor(text=conv, videos=video, return_tensors="pt").to(device)
+    prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
+    inputs = processor(text=prompt_text, videos=video, return_tensors="pt").to(device)
 
     out = model.generate(**inputs, max_new_tokens=max_new_tokens)
     decoded = processor.batch_decode(
