@@ -15,7 +15,7 @@ class LlavaNext(BaseModel):
         super().__init__()
         
         self.model_name = "LLaVANeXT"
-        self.device = torch.device(device) if device else torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(device) if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         if checkpoint:
             self.backbone = LlavaNextVideoForConditionalGeneration.from_pretrained(
