@@ -104,12 +104,14 @@ def predict_binary(
     out = model.generate(**inputs, max_new_tokens=max_new_tokens)
     decoded = processor.batch_decode(out, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
     print(f"Response: {decoded}")
-    pred = decoded.split("ASSISTANT:")[-1].strip()
-    # Find first explicit 0/1
-    for ch in pred:
-        if ch in {"0", "1"}:
-            return int(ch)
-    return 0  # fallback / model refused
+    answer = decoded.split("ASSISTANT:")[-1].strip().lower()
+    # Return the first explicit 0/1 the model outputs
+    if answer.startswith("1") or answer.startswith("yes") or answer.startswith("true"):
+        return 1
+    elif answer.startswith("0") or answer.startswith("no") or answer.startswith("false"):
+        return 0
+
+    return 0  # fallback
 
 
 # ---------- Main ----------------------------------------------------------- #
