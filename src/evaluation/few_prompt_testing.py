@@ -21,8 +21,8 @@ MODEL_JUDGE   = "mistralai/Mistral-7B-Instruct-v0.1"           # text judge
 NUM_SAMPLES   = 40
 SEED          = 42
 DEVICE = "cuda" # for slurm
-CAPTION_DEVICE = torch.device("cuda:1") 
-JUDGE_DEVICE   = torch.device("cuda:5")
+CAPTION_DEVICE = torch.device("cuda") 
+JUDGE_DEVICE   = torch.device("cuda")
 
 PROMPTS = [
 		# Baby visible (real baby vs. mannequin)
