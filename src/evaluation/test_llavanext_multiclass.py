@@ -80,6 +80,10 @@ def build_prompt(label_names: List[str]) -> str:
     return (
         "You will be shown a short video clip. Decide which of the following actions are present: "
         f"{joined}.\n\n"
+        "Keep in mind that there are dependecies between actions:\n"
+        "- If the baby is not visible, then no other action can be present.\n"
+        "- Stimulation can occurr together with ventilation or suction. \n"
+        "- Ventilation and suction can not happen at the same time.\n\n"
         "Reply with a comma‑separated list containing **only** the names of the actions you see, "
         "using exactly the spellings given above (capitalisation may vary). If none of them appear, "
         "reply with the single word `none`. Do not add any other text."
