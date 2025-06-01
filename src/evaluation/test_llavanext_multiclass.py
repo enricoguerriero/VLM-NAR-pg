@@ -126,7 +126,7 @@ def predict_multilabel(
         **inputs,
         max_new_tokens=max_new_tokens,
         do_sample=False,            # greedy decoding for determinism
-        temperature=0.0,
+        temperature=0.2,
     )
     decoded = processor.batch_decode(out, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
     print(f"Response: {decoded}")
