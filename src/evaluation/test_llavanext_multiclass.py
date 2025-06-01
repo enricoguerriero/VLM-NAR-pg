@@ -152,6 +152,7 @@ def main():
 
     label_names = list(samples[0]["labels"].keys())
     prompt = build_prompt(label_names)
+    # prompt = "You are seeing a video clip of a simulation of a newborn resuscitation. You are asked to identify the presence of certain actions in the video."
 
     # Model / processor
     dtype = torch.float16 if args.half else torch.float32
