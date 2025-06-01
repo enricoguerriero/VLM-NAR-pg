@@ -13,7 +13,7 @@ from pathlib import Path
 
 LABELS           = ["baby_visible", "ventilation", "stimulation", "suction"]
 TARGET_PER_LABEL = 100          # 40 examples ÷ 4 labels
-NEGATIVES = 20
+NEGATIVES = 40
 
 def load_jsonl(path):
     with open(path, "r", encoding="utf-8") as f:
