@@ -78,17 +78,13 @@ def build_prompt(label_names: List[str]) -> str:
     natural = [_natural_name(lbl) for lbl in label_names]
     joined = ", ".join(natural)
     return (
-        "You will be shown a short video clip of a simulation of a Newborn resuscitation."
-        "Decide which of the following actions are present: "
-        f"{joined}.\n\n"
-        "Keep in mind that there are dependecies between actions:\n"
-        "- If the baby is not visible, then no other action can be present.\n"
-        "- Stimulation can occurr together with ventilation or suction. \n"
-        "- Ventilation and suction can not happen at the same time.\n"
-        "- All the actions can occur if and only if the baby is visible.\n\n"
-        "Based on what you see in the video, reply with a comma‑separated list containing **only** the names of the actions you see, "
-        "using exactly the spellings given above (capitalisation may vary). If none of them appear, "
-        "reply with the single word `none`. Do not add any other text."
+         f"You will be shown a short video clip of a newborn resuscitation simulation.\n"
+        f"Decide which of the following actions are happening: {joined}.\n\n"
+        "Rules:\n"
+        "- No actions can happen if the baby is not visible.\n"
+        "- Stimulation can happen with either ventilation or suction.\n"
+        "- Ventilation and suction cannot happen at the same time.\n\n"
+        "Reply with a comma-separated list of actions (exact names). If none appear, reply `none`."
     )
 
 
