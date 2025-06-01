@@ -1,48 +1,50 @@
 #!/usr/bin/env python3
-"""test_llava_next_video_multilabel_single_prompt.py
+"""test_llava_next_video_multilabel_list_prompt.py
 
-Zero‑shot evaluation script for LLaVA‑NeXT‑Video on a multi‑label video classification task,
-using **one single prompt per clip** that requests the model to output all labels at once
-in a strict JSON dictionary format.
+Zero‑shot evaluation script for LLaVA‑NeXT‑Video on a multi‑label video classification task
+using **one natural‑language list prompt per clip**.
 
-Expected dataset format (same as the binary‑per‑label variant):
-    Each line in the JSONL input file contains:
-        {
-          "video": "<path/to/video>",
-          "labels": {"baby_visible": 1, "ventilation": 0, "stimulation": 0, "suction": 0}
-        }
+The model is asked to output *only* the names of the actions that are present, separated by
+commas, e.g. ::
 
-Differences from the original script
-------------------------------------
-* Exactly one model call per clip.
-* The prompt forces the assistant to output **only** a JSON object like:
-      {"baby_visible":1,"ventilation":0,"stimulation":0,"suction":1}
-  – no spaces, newlines or additional text.
-* Robust parsing that tolerates minor formatting drift (e.g. spaces/newlines).
+    Baby visible, Ventilation
+
+If no action appears, the model must reply with exactly ``none``.
+
+The script then converts that list into binary labels and computes accuracy, precision,
+recall and F‑score – just like the previous JSON version.
+
+Dataset format
+--------------
+Identical to the other scripts – each line of the input JSONL must look like::
+
+    {"video": "path/to/clip.avi",
+     "labels": {"baby_visible": 1, "ventilation": 0, "stimulation": 0, "suction": 0}}
 
 Example
 -------
-python test_llava_next_video_multilabel_single_prompt.py \
-       --jsonl data/clips/test.jsonl \
-       --model llava-hf/LLaVA-NeXT-Video-7B-hf \
-       --batch-size 1 \
-       --num-frames 8
+::
+
+    python test_llava_next_video_multilabel_list_prompt.py \
+           --jsonl data/clips/test.jsonl \
+           --model llava-hf/LLaVA-NeXT-Video-7B-hf \
+           --num-frames 8
 """
 
 import argparse
 import json
-from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Set
 
-import av                      
-import numpy as np             
-import torch                   
-from tqdm.auto import tqdm     
+import av                      # pip install av
+import numpy as np             # pip install numpy
+import torch                   # pip install torch --index-url https://download.pytorch.org/whl/cu121
+from tqdm.auto import tqdm     # pip install tqdm
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support   # pip install scikit-learn
 from transformers import (
     LlavaNextVideoForConditionalGeneration,
     LlavaNextVideoProcessor,
 )
+
 
 # ---------- Video helpers -------------------------------------------------- #
 
@@ -65,27 +67,27 @@ def _read_video_pyav(filepath: str, num_frames: int = 8) -> np.ndarray:
 
 # ---------- Prompt helpers ------------------------------------------------- #
 
+def _natural_name(label: str) -> str:
+    """Convert snake_case to capitalised natural language ("baby_visible" -> "Baby visible")."""
+    words = label.split("_")
+    return " ".join([words[0].capitalize()] + words[1:])
+
+
 def build_prompt(label_names: List[str]) -> str:
-    """Return a fixed instruction asking for all labels at once in JSON format."""
-
-    natural_labels = [lbl.replace("_", " ") for lbl in label_names]
-    joined = ", ".join(natural_labels)
-
-    fmt_example = "{" + ",".join([f'\"{lbl}\":1' for lbl in label_names]) + "}"
-
+    """Return the single instruction prompt."""
+    natural = [_natural_name(lbl) for lbl in label_names]
+    joined = ", ".join(natural)
     return (
-        "You will be shown a short video clip. For each of the following items — "
-        f"{joined} — decide whether it is present (1) or absent (0).\n\n"
-        "Reply with **only** a JSON dictionary _without spaces or newlines_ whose keys are the label names "
-        "and whose values are 0 or 1.\n\n"
-        "Example of required format (order must match exactly):\n"
-        f"{fmt_example}\n\n"
-        "Do not output anything except that JSON object."
+        "You will be shown a short video clip. Decide which of the following actions are present: "
+        f"{joined}.\n\n"
+        "Reply with a comma‑separated list containing **only** the names of the actions you see, "
+        "using exactly the spellings given above (capitalisation may vary). If none of them appear, "
+        "reply with the single word `none`. Do not add any other text."
     )
 
 
 def build_conversation(prompt: str) -> List[Dict]:
-    """Wrap the single turn + video into LLaVA chat template."""
+    """Wrap user prompt + video into LLaVA chat format."""
     return [
         {
             "role": "user",
@@ -96,6 +98,7 @@ def build_conversation(prompt: str) -> List[Dict]:
         }
     ]
 
+
 # ---------- Prediction per clip ------------------------------------------- #
 @torch.inference_mode()
 def predict_multilabel(
@@ -105,45 +108,52 @@ def predict_multilabel(
     prompt: str,
     label_names: List[str],
     device: torch.device,
-    max_new_tokens: int = 50,
+    max_new_tokens: int = 30,
 ) -> Dict[str, int]:
-    """Return dict(label -> 0/1) after one model call."""
+    """Return dict(label -> 0/1) from a single model call."""
+
     conv = build_conversation(prompt)
     prompt_text = processor.apply_chat_template(conv, add_generation_prompt=True)
     inputs = processor(text=prompt_text, videos=video, return_tensors="pt").to(device)
 
-    out = model.generate(**inputs, max_new_tokens=max_new_tokens)
+    out = model.generate(
+        **inputs,
+        max_new_tokens=max_new_tokens,
+        do_sample=False,            # greedy decoding for determinism
+        temperature=0.0,
+    )
     decoded = processor.batch_decode(out, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
     print(f"Response: {decoded}")
 
-    # Extract JSON substring – find first '{' and last '}'.
-    try:
-        start = decoded.index("{")
-        end = decoded.rindex("}") + 1
-        json_str = decoded[start:end]
-        pred_dict = json.loads(json_str)
-    except (ValueError, json.JSONDecodeError):
-        # Fallback: assume first |label_names| digits appear in correct order
-        digits = [c for c in decoded if c in "01"][: len(label_names)]
-        pred_dict = {lbl: int(digits[i]) if i < len(digits) else 0 for i, lbl in enumerate(label_names)}
+    # Extract assistant reply (everything after last 'ASSISTANT:')
+    reply = decoded.split("ASSISTANT:")[-1].strip()
 
-    # Ensure all keys present and cast to int 0/1
-    for lbl in label_names:
-        pred_dict[lbl] = int(bool(pred_dict.get(lbl, 0)))
-    return pred_dict
+    # Normalise reply: lower‑case, strip spaces around commas
+    reply_norm = reply.lower().replace(",", ", ")  # ensure split works
+    tokens = [t.strip() for t in reply_norm.split(",") if t.strip()]
+
+    present: Set[str]
+    if tokens == ["none"]:
+        present = set()
+    else:
+        # Map every token back to snake_case label if possible
+        mapping = { _natural_name(lbl).lower(): lbl for lbl in label_names }
+        present = { mapping[token] for token in tokens if token in mapping }
+
+    # Build binary dict
+    return { lbl: int(lbl in present) for lbl in label_names }
 
 
 # ---------- Main ----------------------------------------------------------- #
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Zero‑shot multi‑label evaluation with a single prompt and forced JSON output."
+        description="Zero‑shot multi‑label evaluation with a single list prompt and minimal output."
     )
     parser.add_argument("--jsonl", required=True, help="Path to dataset jsonl.")
     parser.add_argument("--model", default="llava-hf/LLaVA-NeXT-Video-7B-hf", help="HF model id or local path.")
-    parser.add_argument("--batch-size", type=int, default=1, help="Reserved for future batching (currently 1).")
     parser.add_argument("--num-frames", type=int, default=8, help="Frames sampled per clip.")
-    parser.add_argument("--half", action="store_true", help="Load model in fp16.")
+    parser.add_argument("--half", action="store_true", help="Load model in fp16 (saves GPU memory).")
     args = parser.parse_args()
 
     # Load dataset
@@ -152,12 +162,13 @@ def main():
 
     label_names = list(samples[0]["labels"].keys())
     prompt = build_prompt(label_names)
-    # prompt = "You are seeing a video clip of a simulation of a newborn resuscitation. You are asked to identify the presence of certain actions in the video."
 
     # Model / processor
     dtype = torch.float16 if args.half else torch.float32
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = LlavaNextVideoForConditionalGeneration.from_pretrained(args.model, torch_dtype=dtype, device_map="auto")
+    model = LlavaNextVideoForConditionalGeneration.from_pretrained(
+        args.model, torch_dtype=dtype, device_map="auto"
+    )
     processor = LlavaNextVideoProcessor.from_pretrained(args.model)
     processor.tokenizer.padding_side = "left"
     model.eval()
@@ -191,7 +202,7 @@ def main():
 
     print("\n===== Macro‑average =====", flush=True)
     print(
-        f"acc={np.mean([accuracy_score(y_true[l], y_pred[l]) for l in label_names]):5.3f}  "  # over labels
+        f"acc={np.mean([accuracy_score(y_true[l], y_pred[l]) for l in label_names]):5.3f}  "
         f"prec={np.mean(macro_prec):5.3f}  rec={np.mean(macro_rec):5.3f}  f1={np.mean(macro_f1):5.3f}", flush=True
     )
 
