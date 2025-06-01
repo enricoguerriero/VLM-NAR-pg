@@ -81,7 +81,7 @@ def build_prompt(label_names: List[str]) -> str:
          f"You will be shown a short video clip of a newborn resuscitation simulation.\n"
         f"Decide which of the following actions are happening: {joined}.\n\n"
         "Rules:\n"
-        "- No actions can happen if the baby is not visible.\n"
+        "- No actions can happen if the baby is not visible (baby is considered visible if the doll is visible).\n"
         "- Stimulation can happen with either ventilation or suction.\n"
         "- Ventilation and suction cannot happen at the same time.\n\n"
         "Reply with a comma-separated list of actions (exact names). If none appear, reply `none`."
