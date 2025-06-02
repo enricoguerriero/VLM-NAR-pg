@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 import av
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 
-from transformers import LlavaNextVideoProcessor, LlavaNextForConditionalGeneration
+from transformers import LlavaNextVideoProcessor, LlavaNextVideoForConditionalGeneration
 from peft import LoraConfig, get_peft_model
 
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
@@ -122,7 +122,7 @@ class VideoJsonlDataset(Dataset):
 # 3.  MODEL WRAPPER
 # ------------------------
 class LlavaVideoClassifier(nn.Module):
-    def __init__(self, backbone: LlavaNextForConditionalGeneration, hidden_size: int, num_labels: int, train_classifier_only: bool):
+    def __init__(self, backbone: LlavaNextVideoForConditionalGeneration, hidden_size: int, num_labels: int, train_classifier_only: bool):
         super().__init__()
         self.backbone = backbone  # with (optionally) LoRA
         self.classifier = nn.Linear(hidden_size, num_labels)
@@ -228,7 +228,7 @@ def main(args):
 
     processor = LlavaNextVideoProcessor.from_pretrained(args.model_id)
     processor.tokenizer.padding_side = "left"
-    backbone = LlavaNextForConditionalGeneration.from_pretrained(args.model_id)
+    backbone = LlavaNextVideoForConditionalGeneration.from_pretrained(args.model_id)
 
     # Apply LoRA unless train_classifier_only
     if not args.train_classifier_only:
