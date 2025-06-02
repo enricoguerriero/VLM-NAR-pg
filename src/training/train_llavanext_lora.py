@@ -151,7 +151,7 @@ class LlavaVideoClassifier(nn.Module):
         last_hidden = outputs.hidden_states[-1]  # (B, T, hidden)
         # Mean‑pool over vision tokens only
         vision_mask = self._get_video_token_indices(video_token_mask)
-        vision_mask_exp = vision_mask.unsqueeze(0).expand_as(last_hidden)  # (B, T, hidden)
+        vision_mask_exp = vision_mask.view(1, -1, 1).expand_as(last_hidden)  # (B, T, hidden)
         summed = (last_hidden * vision_mask_exp).sum(dim=1)
         counts = vision_mask.sum(dim=1).clamp(min=1).unsqueeze(-1)
         vision_feat = summed / counts  # (B, hidden)
