@@ -160,8 +160,8 @@ def main():
     val_ds = load_dataset("json", data_files=str(Path(args.data_dir) / "validation.jsonl"), split="train")
 
     processor = LlavaNextVideoProcessor.from_pretrained(args.model_name)
-    processor.video_processor.do_center_crop = False
-    processor.video_processor.do_pad = True
+    # processor.video_processor.do_center_crop = False
+    # processor.video_processor.do_pad = True
     train_set = VideoDataset(train_ds, processor, num_frames=args.num_frames)
     val_set = VideoDataset(val_ds, processor, num_frames=args.num_frames)
 
