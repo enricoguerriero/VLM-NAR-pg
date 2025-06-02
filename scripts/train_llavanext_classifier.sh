@@ -18,9 +18,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
 
 python src/training/train_llavanext_lora.py \
-    --train_json data/clips/train.jsonl \
-    --val_json data/clips/validation.jsonl \
-    --test_json data/clips/test.jsonl \
+    --train_json data/clips/balanced_test.jsonl \
     --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
     --output_dir outputs/llavanext_lora \
     --batch_size 1 \

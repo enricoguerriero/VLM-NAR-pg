@@ -1,36 +1,3 @@
-#!/usr/bin/env python3
-"""test_llava_next_video_multilabel_list_prompt.py
-
-Zero‑shot evaluation script for LLaVA‑NeXT‑Video on a multi‑label video classification task
-using **one natural‑language list prompt per clip**.
-
-The model is asked to output *only* the names of the actions that are present, separated by
-commas, e.g. ::
-
-    Baby visible, Ventilation
-
-If no action appears, the model must reply with exactly ``none``.
-
-The script then converts that list into binary labels and computes accuracy, precision,
-recall and F‑score – just like the previous JSON version.
-
-Dataset format
---------------
-Identical to the other scripts – each line of the input JSONL must look like::
-
-    {"video": "path/to/clip.avi",
-     "labels": {"baby_visible": 1, "ventilation": 0, "stimulation": 0, "suction": 0}}
-
-Example
--------
-::
-
-    python test_llava_next_video_multilabel_list_prompt.py \
-           --jsonl data/clips/test.jsonl \
-           --model llava-hf/LLaVA-NeXT-Video-7B-hf \
-           --num-frames 8
-"""
-
 import argparse
 import json
 from typing import Dict, List, Set
