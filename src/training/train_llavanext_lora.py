@@ -161,7 +161,7 @@ def main():
 
     processor = LlavaNextVideoProcessor.from_pretrained(args.model_name)
     processor.video_processor.do_center_crop = False
-    processor.image_processor.do_center_crop = False  # safeguard
+    processor.video_processor.do_pad = True
     train_set = VideoDataset(train_ds, processor, num_frames=args.num_frames)
     val_set = VideoDataset(val_ds, processor, num_frames=args.num_frames)
 

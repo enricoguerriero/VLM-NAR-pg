@@ -12,7 +12,7 @@ from collections import defaultdict, Counter
 from pathlib import Path
 
 LABELS           = ["baby_visible", "ventilation", "stimulation", "suction"]
-TARGET_PER_LABEL = 100          # 40 examples ÷ 4 labels
+TARGET_PER_LABEL = 100
 NEGATIVES = 100
 
 def load_jsonl(path):
