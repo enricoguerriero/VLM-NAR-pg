@@ -123,8 +123,8 @@ class VideoJsonlDataset(Dataset):
 
         # Prompt
         prompt = self.prompt_template
-
-        processed = self.processor(text=prompt, videos=frames, return_tensors="pt")
+        prompt_text = self.processor.apply_chat_template(prompt, add_generation_prompt=True)
+        processed = self.processor(text=prompt_text, videos=frames, return_tensors="pt")
         # processor returns dict with pixel_values (F, C, H, W) & tokenized text
         pixel_values_videos = processed["pixel_values_videos"]  # (F, C, H, W)
         input_ids = processed["input_ids"].squeeze(0)  # (T,)
@@ -227,6 +227,18 @@ def metrics_from_preds(y_true: np.ndarray, y_pred: np.ndarray):
     })
     return metrics
 
+def build_conversation(prompt: str) -> List[Dict]:
+    """Wrap user prompt + video into LLaVA chat format."""
+    return [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "video"},
+            ],
+        }
+    ]
+
 
 # ------------------------
 # 5.  MAIN LOOP
@@ -235,9 +247,10 @@ def metrics_from_preds(y_true: np.ndarray, y_pred: np.ndarray):
 def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    caption_prompt = "You are in a simulation of a neonatal resuscitation scenario. Give a caption for the video: <video> Be explicit about:\n-Who is present in the video.\n-What is happening in the video.\n-What actions are being performed.\n-What equipment is being used."
+    caption_prompt = "You are in a simulation of a neonatal resuscitation scenario. Give a caption for the video; be explicit about:\n-Who is present in the video.\n-What is happening in the video.\n-What actions are being performed.\n-What equipment is being used."
     # WandB init
     wandb.init(project=args.wandb_project, name=args.run_name, config=vars(args))
+    prompt = build_conversation(caption_prompt)
 
     processor = LlavaNextProcessor.from_pretrained(args.model_id)
     processor.tokenizer.padding_side = "left"
@@ -262,9 +275,9 @@ def main(args):
     ).to(device)
 
     # Datasets & loaders
-    train_ds = VideoJsonlDataset(args.train_json, processor, caption_prompt, num_frames=args.num_frames)
-    val_ds   = VideoJsonlDataset(args.val_json,   processor, caption_prompt, num_frames=args.num_frames)
-    test_ds  = VideoJsonlDataset(args.test_json,  processor, caption_prompt, num_frames=args.num_frames)
+    train_ds = VideoJsonlDataset(args.train_json, processor, prompt, num_frames=args.num_frames)
+    val_ds   = VideoJsonlDataset(args.val_json,   processor, prompt, num_frames=args.num_frames)
+    test_ds  = VideoJsonlDataset(args.test_json,  processor, prompt, num_frames=args.num_frames)
 
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, num_workers=4, pin_memory=True)
     val_loader   = DataLoader(val_ds,   batch_size=args.batch_size, shuffle=False, collate_fn=collate_fn, num_workers=4, pin_memory=True)
