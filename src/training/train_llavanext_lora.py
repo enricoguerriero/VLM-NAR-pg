@@ -124,7 +124,7 @@ class VideoJsonlDataset(Dataset):
         # Prompt
         prompt = self.prompt_template
 
-        processed = self.processor(videos=frames, text=prompt, return_tensors="pt")
+        processed = self.processor(text=prompt, videos=frames, return_tensors="pt")
         # processor returns dict with pixel_values (F, C, H, W) & tokenized text
         pixel_values_videos = processed["pixel_values_videos"]  # (F, C, H, W)
         input_ids = processed["input_ids"].squeeze(0)  # (T,)
@@ -235,7 +235,7 @@ def metrics_from_preds(y_true: np.ndarray, y_pred: np.ndarray):
 def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    caption_prompt = "You are in a simulation of a neonatal resuscitation scenario. Give a caption for the video, being explicit about:\n-Who is present in the video.\n-What is happening in the video.\n-What actions are being performed.\n-What equipment is being used."
+    caption_prompt = "You are in a simulation of a neonatal resuscitation scenario. Give a caption for the video: <video> Be explicit about:\n-Who is present in the video.\n-What is happening in the video.\n-What actions are being performed.\n-What equipment is being used."
     # WandB init
     wandb.init(project=args.wandb_project, name=args.run_name, config=vars(args))
 
