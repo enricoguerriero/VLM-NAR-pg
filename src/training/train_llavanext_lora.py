@@ -16,6 +16,7 @@ from peft import LoraConfig, get_peft_model
 
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 import wandb
+from tqdm import tqdm
 
 # ------------------------
 # 1.  CONSTANTS & HELPERS
@@ -269,7 +270,7 @@ def main(args):
         # ----- Training -----
         model.train()
         running_loss = 0.0
-        for batch in train_loader:
+        for batch in tqdm(train_loader, desc="Training", unit="batch"):
             pixel_values_videos = batch["pixel_values_videos"].to(device)
             input_ids = batch["input_ids"].to(device)
             attn = batch["attention_mask"].to(device)
