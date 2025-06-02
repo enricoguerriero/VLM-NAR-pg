@@ -22,7 +22,7 @@ PROMPTS = [
         You are given a caption provided by a captioning model of a video, in a newborn resuscitation simulation context.
         You need to determine if a baby is visible in the video based on the caption. 
 		Caption: "{answer}"  
-		Is the caption mentioning a doll / mannequin present in the video?
+		Is the caption mentioning either a doll / mannequin or a baby present in the video?
         Answer with "Yes" or "No"
 		''',
 
@@ -135,7 +135,6 @@ def caption_video(
         temperature=0.4,
     )
     decoded = processor.batch_decode(out, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
-    print(f"Response: {decoded}")
     
     reply = decoded.split("ASSISTANT:")[-1].strip()
     return reply
