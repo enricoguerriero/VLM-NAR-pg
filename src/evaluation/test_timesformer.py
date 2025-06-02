@@ -159,7 +159,7 @@ model = TimeSformer(
 all_logits, all_labels = [], []
 
 with torch.no_grad():
-    for batch in test_loader:
+    for batch in tqdm(test_loader, desc="Evaluating", unit="batch"):
         pixel_values = batch["pixel_values"].to(DEVICE)
         labels       = batch["labels"].to(DEVICE)
 
