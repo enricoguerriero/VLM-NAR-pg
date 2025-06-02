@@ -22,8 +22,8 @@ python src/training/train_llavanext_lora.py \
     --test_json data/clips/test_balanced.jsonl \
     --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
     --output_dir outputs/llavanext_lora \
-    --batch_size 2 \
-    --epochs 2 \
+    --batch_size 1 \
+    --epochs 1 \
     --lr 5e-5 \
     --num_frames 16 \
     --lora_r 16 \
