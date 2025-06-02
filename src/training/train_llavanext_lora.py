@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 import av
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 
-from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration
+from transformers import LlavaNextVideoProcessor, LlavaNextForConditionalGeneration
 from peft import LoraConfig, get_peft_model
 
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
@@ -57,7 +57,7 @@ class VideoJsonlDataset(Dataset):
     def __init__(
         self,
         jsonl_path: str,
-        processor: LlavaNextProcessor,
+        processor: LlavaNextVideoProcessor,
         prompt_template: str,
         num_frames: int = 8,
         max_length: int = 128,
@@ -69,7 +69,7 @@ class VideoJsonlDataset(Dataset):
         self.num_frames = num_frames
         self.max_length = max_length
         # Pre‑compute index of image placeholder token once
-        self.image_token = self.processor.tokenizer.video_token_id
+        self.video_token = self.processor.tokenizer.video_token_id
 
     def __len__(self):
         return len(self.records)
@@ -226,7 +226,7 @@ def main(args):
     wandb.init(project=args.wandb_project, name=args.run_name, config=vars(args))
     prompt = build_conversation(caption_prompt)
 
-    processor = LlavaNextProcessor.from_pretrained(args.model_id)
+    processor = LlavaNextVideoProcessor.from_pretrained(args.model_id)
     processor.tokenizer.padding_side = "left"
     backbone = LlavaNextForConditionalGeneration.from_pretrained(args.model_id)
 
