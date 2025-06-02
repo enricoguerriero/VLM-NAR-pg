@@ -102,8 +102,8 @@ class VideoJsonlDataset(Dataset):
         # print("Processor output keys:", processed.keys(), flush=True)
         # processor returns dict with pixel_values (F, C, H, W) & tokenized text
         pixel_values_videos = processed["pixel_values_videos"]  # (F, C, H, W)
-        input_ids = processed["input_ids"].squeeze(0)  # (T,)
-        attention_mask = processed["attention_mask"].squeeze(0)  # (T,)
+        input_ids = processed["input_ids"]  # (T,)
+        attention_mask = processed["attention_mask"]  # (T,)
 
         # Identify vision tokens (== image_token_id)
         video_token_mask = (input_ids == self.video_token).long()
