@@ -110,7 +110,7 @@ class TimeSformer(nn.Module):
         config = TimesformerConfig.from_pretrained(base_model_id)
         self.processor = AutoImageProcessor.from_pretrained(base_model_id)
         self.backbone = TimesformerForVideoClassification.from_pretrained(base_model_id)
-        # self.backbone.classifier = nn.Identity()
+        self.backbone.classifier = nn.Identity()
         
         if num_frames != 8:  # 8 = default number of frames for SSV2 pretraining
             self.interpolate_pos_encoding(num_frames=num_frames)
