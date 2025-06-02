@@ -23,7 +23,7 @@ python src/training/train_llavanext_lora.py \
     --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
     --output_dir outputs/llavanext_classifier \
     --batch_size 1 \
-    --epochs 3 \
+    --epochs 1 \
     --lr 5e-5 \
     --num_frames 16 \
     --train_classifier_only \
