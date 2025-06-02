@@ -42,7 +42,7 @@ PROMPTS = [
         '''
         Caption: "{answer}"
         Is the caption mentioning a ventilation mask over the face of a baby?
-        Reply “Yes” or “No”.'''
+        Reply “Yes” or “No”.''',
 
 		# Stimulation (up-and-down movements)
 		# '''
@@ -241,8 +241,6 @@ def main():
                     judge_prompt,
                     max_new_tokens = 15,
                     do_sample = False,
-                    temperature = 0.0,
-                    top_p = 1.0,
             )[0]["generated_text"].strip().lower()
             match = re.search(r"\b(yes|no)\b", judge_raw)
             pred = match.group(1) == "yes" if match else False
