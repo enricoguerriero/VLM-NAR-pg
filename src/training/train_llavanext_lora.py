@@ -287,7 +287,7 @@ def main(args):
             loss = criterion(logits, labels)
             loss.backward()
             optim.step()
-            print(f"Logits shape: {logits.shape}, Labels shape: {labels.shape}", flush =True)
+            # print(f"Logits shape: {logits.shape}, Labels shape: {labels.shape}", flush =True)
 
             running_loss += loss.item() * labels.size(0)
 
