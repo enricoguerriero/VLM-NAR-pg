@@ -258,7 +258,7 @@ def main():
         true_label = sample["labels"]
         
         for class_idx, label in enumerate(label_names):
-            judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " ")).to(judge_device)
+            judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
             judge_raw = judge_pipe(
                     judge_prompt,
                     max_new_tokens = 15,
