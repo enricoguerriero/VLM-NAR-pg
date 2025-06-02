@@ -305,6 +305,7 @@ def main(args):
                 labels = batch["labels"].to(device)
 
                 logits = model(pixel_values_videos, input_ids, attn, video_mask)
+                logits = logits.mean(dim=1)  
                 probs = torch.sigmoid(logits)  # (B, num_labels)
                 all_logits.append(probs.cpu())
                 all_labels.append(labels.cpu())
