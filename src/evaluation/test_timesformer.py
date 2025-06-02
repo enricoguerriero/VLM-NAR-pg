@@ -14,7 +14,7 @@ import av
 # ---------- 1.  Config --------------------------------------------------------
 
 JSONL_TEST   = "data/test_balanced.jsonl"          # ← your test file
-PRETRAINED   = "models/TimeSformer/"  
+PRETRAINED   = "models/TimeSformer/model.pth"  
 BATCH_SIZE   = 4
 NUM_FRAMES   = 8                          # must match dataset + model
 DEVICE       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
