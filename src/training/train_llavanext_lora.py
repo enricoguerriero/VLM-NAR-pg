@@ -277,6 +277,10 @@ def main(args):
             video_mask = batch["video_token_mask"].to(device)
             labels = batch["labels"].to(device)
 
+            print("pixel_values_videos:", pixel_values_videos.shape)
+            print("input_ids:", input_ids.shape)
+            print("attention_mask:", attn.shape)
+
             optim.zero_grad()
             logits = model(pixel_values_videos, input_ids, attn, video_mask)
             loss = criterion(logits, labels)
