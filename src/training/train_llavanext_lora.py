@@ -145,15 +145,16 @@ class LlavaVideoClassifier(nn.Module):
             output_hidden_states=True,
             return_dict=True,
         )
-        last_hidden = outputs.hidden_states[-1]  # (B, T, hidden)
-        vision_mask = self._get_video_token_indices(video_token_mask)  # (B, T)
-        vision_mask_exp = vision_mask.view(vision_mask.size(0), -1, 1).expand_as(last_hidden)  # (B, T, hidden)
+        last_hidden = outputs.hidden_states[-1]  
+                    
+        video_token_id = self.backbone.config.video_token_index
+        
+        video_mask = (input_ids == video_token_id).to(self.device)
+        
+        pooled_video = (last_hidden * video_mask.unsqueeze(-1)).sum(1) / \
+               video_mask.sum(1, keepdim=True).clamp(min=1)# (B, hidden)
 
-        summed = (last_hidden * vision_mask_exp).sum(dim=1)                   # (B, hidden)
-        counts = vision_mask.sum(dim=1).clamp(min=1).unsqueeze(-1)           # (B, 1)
-        vision_feat = summed / counts                                        # (B, hidden)
-
-        logits = self.classifier(vision_feat)  # (B, num_labels)
+        logits = self.classifier(pooled_video.float())  # (B, num_labels)
         return logits
 
 
@@ -305,7 +306,6 @@ def main(args):
                 labels = batch["labels"].to(device)
 
                 logits = model(pixel_values_videos, input_ids, attn, video_mask)
-                logits = logits.mean(dim=1)  
                 probs = torch.sigmoid(logits)  # (B, num_labels)
                 all_logits.append(probs.cpu())
                 all_labels.append(labels.cpu())
