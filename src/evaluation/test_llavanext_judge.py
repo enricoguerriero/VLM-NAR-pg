@@ -184,6 +184,7 @@ def main():
         samples = [json.loads(line) for line in f]
 
     label_names = list(samples[0]["labels"].keys())
+    print(f"Dataset has {len(samples)} samples with labels: {label_names}", flush=True)
     prompt = '''
     You are in a simulation of a newborn resuscitation scenario.
     You will be shown a short video clip of a newborn resuscitation simulation.
