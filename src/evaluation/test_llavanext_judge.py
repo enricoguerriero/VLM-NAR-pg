@@ -235,6 +235,7 @@ def main():
             model = judge,
             tokenizer = judge_processor,
             task = "text-generation",
+            device=judge_device.index,
             pad_token_id = judge_processor.eos_token_id,
             return_full_text = False,
             clean_up_tokenization_spaces = True,
