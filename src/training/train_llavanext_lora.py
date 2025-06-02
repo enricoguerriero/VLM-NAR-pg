@@ -1,26 +1,3 @@
-#!/usr/bin/env python
-"""Fine‑tune **LLaVA‑NeXT‑Video** for *multi‑label* video classification with **LoRA**.
-
-### Change log
-* 🔒 **Hard‑coded label order** – The label space is fixed to
-  `LABEL_LIST = ["baby_visible", "ventilation", "stimulation", "suction"]`.
-  No dataset scanning, so index ↔︎ label correspondence is always:
-  ```
-  0 → baby_visible
-  1 → ventilation
-  2 → stimulation
-  3 → suction
-  ```
-* All other functionality (W&B logging, best‑checkpoint, LoRA adapters, metrics) unchanged.
-
-### Quick start
-```bash
-python finetune_llava_next_video_multilabel.py \
-  --data_dir data/clips \
-  --output_dir runs/exp1 \
-  --wandb_project resus-video
-```
-"""
 import argparse
 import os
 from pathlib import Path
@@ -122,7 +99,7 @@ class LlavaNextVideoForMultiLabel(nn.Module):
                 task_type=TaskType.FEATURE_EXTRACTION,
             ),
         )
-        self.classifier = nn.Linear(self.base.config.hidden_size, len(LABEL_LIST))
+        self.classifier = nn.Linear(self.base.config.text_config.hidden_size, len(LABEL_LIST))
         self.loss_fct = nn.BCEWithLogitsLoss()
 
     def forward(self, **kwargs):
@@ -183,6 +160,8 @@ def main():
     val_ds = load_dataset("json", data_files=str(Path(args.data_dir) / "validation.jsonl"), split="train")
 
     processor = LlavaNextVideoProcessor.from_pretrained(args.model_name)
+    processor.video_processor.do_center_crop = False
+    processor.image_processor.do_center_crop = False  # safeguard
     train_set = VideoDataset(train_ds, processor, num_frames=args.num_frames)
     val_set = VideoDataset(val_ds, processor, num_frames=args.num_frames)
 
