@@ -18,13 +18,18 @@ MODEL_JUDGE   = "mistralai/Mistral-7B-Instruct-v0.1"
 
 PROMPTS = [
 		# Baby visible (real baby vs. mannequin)
-		'''You are a precise evaluator. Respond with **just** yes or no.
-        You are given a caption provided by a captioning model of a video, in a newborn resuscitation simulation context.
-        You need to determine if a baby is visible in the video based on the caption. 
-		Caption: "{answer}"  
-		Is the caption mentioning either a doll / mannequin or a baby present in the video?
-        Answer with "Yes" or "No"
-		''',
+		# '''You are a precise evaluator. Respond with **just** yes or no.
+        # You are given a caption provided by a captioning model of a video, in a newborn resuscitation simulation context.
+        # You need to determine if a baby is visible in the video based on the caption. 
+		# Caption: "{answer}"  
+		# Is the caption mentioning either a doll / mannequin or a baby present in the video?
+        # Answer with "Yes" or "No"
+		# ''',
+        '''
+        Caption: "{answer}"
+        Does this caption mention a baby or mannequin being visible? 
+        Reply “Yes” or “No”.
+        ''',
 
 		# Ventilation (mask usage)
 		'''
