@@ -22,8 +22,6 @@ from tqdm import tqdm
 # ------------------------
 CLASSES = ["baby_visible", "ventilation", "stimulation", "suction"]
 NUM_LABELS = len(CLASSES)
-IMG_MEAN = (0.485, 0.456, 0.406)
-IMG_STD = (0.229, 0.224, 0.225)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
