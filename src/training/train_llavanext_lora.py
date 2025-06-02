@@ -36,9 +36,9 @@ def uniform_frame_indices(num_frames: int, num_sampled: int) -> List[int]:
 
 def collate_fn(batch: List[Dict]):
     # batch: list of dicts returned by VideoJsonlDataset.__getitem__
-    pixel_values_videos = torch.stack([item["pixel_values_videos"] for item in batch])  # (B, F, C, H, W)
-    input_ids = torch.stack([item["input_ids"] for item in batch])        # (B, T)
-    attention_mask = torch.stack([item["attention_mask"] for item in batch])
+    pixel_values_videos = torch.cat([item["pixel_values_videos"] for item in batch])  # (B, F, C, H, W)
+    input_ids = torch.cat([item["input_ids"] for item in batch])        # (B, T)
+    attention_mask = torch.cat([item["attention_mask"] for item in batch])
     labels = torch.stack([item["labels"] for item in batch]).float()
     video_token_mask = torch.stack([item["video_token_mask"] for item in batch])  # (B, T)
     return {
