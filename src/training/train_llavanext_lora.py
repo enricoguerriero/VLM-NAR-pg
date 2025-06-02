@@ -24,6 +24,7 @@ CLASSES = ["baby_visible", "ventilation", "stimulation", "suction"]
 NUM_LABELS = len(CLASSES)
 IMG_MEAN = (0.485, 0.456, 0.406)
 IMG_STD = (0.229, 0.224, 0.225)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def uniform_frame_indices(num_frames: int, num_sampled: int) -> List[int]:
@@ -149,7 +150,7 @@ class LlavaVideoClassifier(nn.Module):
                     
         video_token_id = self.backbone.config.video_token_index
         
-        video_mask = (input_ids == video_token_id).to(self.device)
+        video_mask = (input_ids == video_token_id).to(device)
         
         pooled_video = (last_hidden * video_mask.unsqueeze(-1)).sum(1) / \
                video_mask.sum(1, keepdim=True).clamp(min=1)# (B, hidden)
@@ -219,7 +220,6 @@ def build_conversation(prompt: str) -> List[Dict]:
 # 5.  MAIN LOOP (TRAIN ONLY, WITH METRICS)
 # ------------------------
 def main(args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     caption_prompt = (
         "You are in a simulation of a neonatal resuscitation scenario. "
