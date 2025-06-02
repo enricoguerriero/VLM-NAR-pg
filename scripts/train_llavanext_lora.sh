@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:4
 #SBATCH --partition=gpu
 #SBATCH --time=48:00:00
 #SBATCH --job-name=train_llavanext_lora
@@ -22,7 +22,7 @@ python src/training/train_llavanext_lora.py \
     --test_json data/clips/test_balanced.jsonl \
     --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
     --output_dir outputs/llavanext_lora \
-    --batch_size 1 \
+    --batch_size 4 \
     --epochs 2 \
     --lr 5e-5 \
     --num_frames 16 \
