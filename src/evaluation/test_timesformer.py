@@ -72,7 +72,7 @@ class VideoJsonlDataset(Dataset):
             "labels": label_vec
         }
 
-processor = AutoImageProcessor.from_pretrained(PRETRAINED)
+processor = AutoImageProcessor.from_pretrained(MODEL_ID)
 test_ds   = VideoJsonlDataset(JSONL_TEST, processor, num_frames=NUM_FRAMES)
 
 def collate_fn(batch):
