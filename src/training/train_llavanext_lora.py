@@ -73,17 +73,17 @@ def uniform_frame_indices(num_frames: int, num_sampled: int) -> List[int]:
 
 def collate_fn(batch: List[Dict]):
     # batch: list of dicts returned by VideoJsonlDataset.__getitem__
-    pixel_values = torch.stack([item["pixel_values"] for item in batch])  # (B, F, C, H, W)
+    pixel_values_videos = torch.stack([item["pixel_values_videos"] for item in batch])  # (B, F, C, H, W)
     input_ids = torch.stack([item["input_ids"] for item in batch])        # (B, T)
     attention_mask = torch.stack([item["attention_mask"] for item in batch])
     labels = torch.stack([item["labels"] for item in batch]).float()
-    img_token_mask = torch.stack([item["img_token_mask"] for item in batch])  # (B, T)
+    video_token_mask = torch.stack([item["video_token_mask"] for item in batch])  # (B, T)
     return {
-        "pixel_values": pixel_values,
+        "pixel_values_videos": pixel_values_videos,
         "input_ids": input_ids,
         "attention_mask": attention_mask,
         "labels": labels,
-        "img_token_mask": img_token_mask,
+        "video_token_mask": video_token_mask,
     }
 
 
@@ -240,6 +240,7 @@ def main(args):
     wandb.init(project=args.wandb_project, name=args.run_name, config=vars(args))
 
     processor = LlavaNextProcessor.from_pretrained(args.model_id)
+    processor.tokenizer.padding_side = "left"
     backbone = LlavaNextForConditionalGeneration.from_pretrained(args.model_id)
 
     # Apply LoRA unless train_classifier_only
