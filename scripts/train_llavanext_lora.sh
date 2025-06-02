@@ -31,7 +31,7 @@ python src/training/train_llavanext_lora.py \
     --lora_dropout 0.1 \
     --wandb_project llavanext_lora \
     --run_name llavanext_lora_run \
-    --no_log_training_metrics
+    --no-log-training-metrics
 
 
 echo "--- THE END ---"
