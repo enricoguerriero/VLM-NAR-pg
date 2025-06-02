@@ -35,8 +35,6 @@ class VideoJsonlDataset(Dataset):
         self.records = [json.loads(l) for l in Path(jsonl_path).read_text().splitlines()]
         self.processor = processor
         self.num_frames = num_frames
-        # Pre-compute index of image placeholder token once
-        self.video_token = self.processor.tokenizer.video_token_id
 
     def __len__(self):
         return len(self.records)
