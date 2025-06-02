@@ -287,6 +287,7 @@ def main(args):
             loss = criterion(logits, labels)
             loss.backward()
             optim.step()
+            print(f"Logits shape: {logits.shape}, Labels shape: {labels.shape}")
 
             running_loss += loss.item() * labels.size(0)
 
@@ -309,7 +310,6 @@ def main(args):
                 probs = torch.sigmoid(logits)  # (B, num_labels)
                 all_logits.append(probs.cpu())
                 all_labels.append(labels.cpu())
-                print(f"Logits shape: {logits.shape}, Labels shape: {labels.shape}")
 
         y_pred = torch.cat(all_logits).numpy()
         y_true = torch.cat(all_labels).numpy()
