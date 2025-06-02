@@ -283,7 +283,8 @@ def main(args):
 
             optim.zero_grad()
             logits = model(pixel_values_videos, input_ids, attn, video_mask)
-            loss = criterion(logits, labels)
+            logits_pooled = logits.mean(dim=1)
+            loss = criterion(logits_pooled, labels)
             loss.backward()
             optim.step()
             running_loss += loss.item() * labels.size(0)
