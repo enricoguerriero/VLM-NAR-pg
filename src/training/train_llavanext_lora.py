@@ -265,6 +265,7 @@ def main(args):
 
     best_f1 = 0.0
     for epoch in range(args.epochs):
+        print(f"\nEpoch {epoch+1}/{args.epochs} | Training...")
         # ----- Training -----
         model.train()
         running_loss = 0.0
