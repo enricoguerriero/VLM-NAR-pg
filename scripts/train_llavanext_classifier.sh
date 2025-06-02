@@ -21,7 +21,7 @@ python src/training/train_llavanext_lora.py \
     --train_json data/clips/total_train.jsonl \ 
     --test_json data/clips/test_balanced.jsonl \
     --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
-    --output_dir outputs/llavanext_lora \
+    --output_dir outputs/llavanext_classifier \
     --batch_size 1 \
     --epochs 2 \
     --lr 5e-5 \
