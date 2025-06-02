@@ -18,7 +18,8 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
 
 python src/training/train_llavanext_lora.py \
-    --train_json data/clips/test_balanced.jsonl \
+    --train_json data/clips/total_train.jsonl \
+    --test_json data/clips/test_balanced.jsonl \
     --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
     --output_dir outputs/llavanext_lora \
     --batch_size 1 \
@@ -29,7 +30,8 @@ python src/training/train_llavanext_lora.py \
     --lora_alpha 32 \
     --lora_dropout 0.1 \
     --wandb_project llavanext_lora \
-    --run_name llavanext_lora_run 
+    --run_name llavanext_lora_run \
+    --no_log_training_metrics
 
 
 echo "--- THE END ---"

@@ -146,14 +146,14 @@ class LlavaVideoClassifier(nn.Module):
             output_hidden_states=True,
             return_dict=True,
         )
-        last_hidden = outputs.hidden_states[-1]  
-                    
+        last_hidden = outputs.hidden_states[-1]
+
         video_token_id = self.backbone.config.video_token_index
-        
+
         video_mask = (input_ids == video_token_id).to(device)
-        
+
         pooled_video = (last_hidden * video_mask.unsqueeze(-1)).sum(1) / \
-               video_mask.sum(1, keepdim=True).clamp(min=1)# (B, hidden)
+               video_mask.sum(1, keepdim=True).clamp(min=1)  # (B, hidden)
 
         logits = self.classifier(pooled_video.float())  # (B, num_labels)
         return logits
@@ -217,7 +217,7 @@ def build_conversation(prompt: str) -> List[Dict]:
 
 
 # ------------------------
-# 5.  MAIN LOOP (TRAIN ONLY, WITH METRICS)
+# 5.  MAIN LOOP (TRAIN ONLY, WITH METRICS + OPTIONAL TEST)
 # ------------------------
 def main(args):
 
@@ -287,7 +287,6 @@ def main(args):
             loss = criterion(logits, labels)
             loss.backward()
             optim.step()
-            # print(f"Logits shape: {logits.shape}, Labels shape: {labels.shape}", flush =True)
 
             running_loss += loss.item() * labels.size(0)
 
@@ -296,30 +295,33 @@ def main(args):
         print(f"Epoch {epoch+1}/{args.epochs} | train_loss={train_loss:.4f}")
 
         # ----- Compute metrics on the entire training set -----
-        model.eval()
-        all_logits, all_labels = [], []
-        with torch.no_grad():
-            for batch in train_loader:
-                pixel_values_videos = batch["pixel_values_videos"].to(device)
-                input_ids = batch["input_ids"].to(device)
-                attn = batch["attention_mask"].to(device)
-                video_mask = batch["video_token_mask"].to(device)
-                labels = batch["labels"].to(device)
+        if args.log_training_metrics:
+            model.eval()
+            all_logits, all_labels = [], []
+            with torch.no_grad():
+                for batch in train_loader:
+                    pixel_values_videos = batch["pixel_values_videos"].to(device)
+                    input_ids = batch["input_ids"].to(device)
+                    attn = batch["attention_mask"].to(device)
+                    video_mask = batch["video_token_mask"].to(device)
+                    labels = batch["labels"].to(device)
 
-                logits = model(pixel_values_videos, input_ids, attn, video_mask)
-                probs = torch.sigmoid(logits)  # (B, num_labels)
-                all_logits.append(probs.cpu())
-                all_labels.append(labels.cpu())
+                    logits = model(pixel_values_videos, input_ids, attn, video_mask)
+                    probs = torch.sigmoid(logits)  # (B, num_labels)
+                    all_logits.append(probs.cpu())
+                    all_labels.append(labels.cpu())
 
-        y_pred = torch.cat(all_logits).numpy()
-        y_true = torch.cat(all_labels).numpy()
-        train_metrics = metrics_from_preds(y_true, y_pred)
-        # Log each metric with prefix "train/"
-        wandb.log({f"train/{k}": v for k, v in train_metrics.items()}, step=epoch)
+            y_pred = torch.cat(all_logits).numpy()
+            y_true = torch.cat(all_labels).numpy()
+            train_metrics = metrics_from_preds(y_true, y_pred)
+            # Log each metric with prefix "train/"
+            wandb.log({f"train/{k}": v for k, v in train_metrics.items()}, step=epoch)
 
-        # Print a summary to console
-        summary = ", ".join([f"{k}={v:.4f}" for k, v in train_metrics.items() if k.startswith("macro/")])
-        print(f"  [Training metrics] {summary}")
+            # Print a summary to console
+            summary = ", ".join([f"{k}={v:.4f}" for k, v in train_metrics.items() if k.startswith("macro/")])
+            print(f"  [Training metrics] {summary}")
+        else:
+            print("  [Training metrics] Skipped (log_training_metrics=False)")
 
     # Save final model
     os.makedirs(args.output_dir, exist_ok=True)
@@ -327,13 +329,52 @@ def main(args):
     torch.save(model.state_dict(), save_path)
     print(f"\nTraining complete. Model saved to {save_path}")
 
+    # ----- Optional: evaluate on test set -----
+    if args.test_json:
+        print("\nEvaluating on test set...")
+        test_ds = VideoJsonlDataset(args.test_json, processor, prompt, num_frames=args.num_frames)
+        test_loader = DataLoader(
+            test_ds,
+            batch_size=args.batch_size,
+            shuffle=False,
+            collate_fn=collate_fn,
+            num_workers=4,
+            pin_memory=True,
+        )
+
+        model.eval()
+        all_logits, all_labels = [], []
+        with torch.no_grad():
+            for batch in tqdm(test_loader, desc="Testing", unit="batch"):
+                pixel_values_videos = batch["pixel_values_videos"].to(device)
+                input_ids = batch["input_ids"].to(device)
+                attn = batch["attention_mask"].to(device)
+                video_mask = batch["video_token_mask"].to(device)
+                labels = batch["labels"].to(device)
+
+                logits = model(pixel_values_videos, input_ids, attn, video_mask)
+                probs = torch.sigmoid(logits)
+                all_logits.append(probs.cpu())
+                all_labels.append(labels.cpu())
+
+        y_pred = torch.cat(all_logits).numpy()
+        y_true = torch.cat(all_labels).numpy()
+        test_metrics = metrics_from_preds(y_true, y_pred)
+        # Log each metric with prefix "test/"
+        wandb.log({f"test/{k}": v for k, v in test_metrics.items()})
+
+        # Print a summary to console
+        summary = ", ".join([f"{k}={v:.4f}" for k, v in test_metrics.items() if k.startswith("macro/")])
+        print(f"  [Test metrics] {summary}")
+
 
 # ------------------------
 # 6.  ARGPARSE
 # ------------------------
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train LLaVA-NeXT classifier on video (train-only, with metrics).")
+    parser = argparse.ArgumentParser(description="Train LLaVA-NeXT classifier on video (train-only, with metrics + optional test).")
     parser.add_argument("--train_json", type=str, required=True, help="Path to training JSONL file")
+    parser.add_argument("--test_json", type=str, default=None, help="Path to test JSONL file (optional)")
     parser.add_argument("--model_id", type=str, default="llava-hf/llava-next-large-430k")
     parser.add_argument("--output_dir", type=str, default="outputs")
     parser.add_argument("--batch_size", type=int, default=2)
@@ -350,6 +391,15 @@ if __name__ == "__main__":
     # WandB
     parser.add_argument("--wandb_project", type=str, default="llava-video")
     parser.add_argument("--run_name", type=str, default="train_only_metrics")
+
+    # Flag to skip computing/logging training metrics
+    parser.add_argument(
+        "--no-log-training-metrics",
+        dest="log_training_metrics",
+        action="store_false",
+        help="If set, skip the second iteration over the data to compute training metrics."
+    )
+    parser.set_defaults(log_training_metrics=True)
 
     args = parser.parse_args()
 
