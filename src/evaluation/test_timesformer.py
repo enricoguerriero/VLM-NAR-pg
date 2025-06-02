@@ -140,12 +140,13 @@ class TimeSformer(nn.Module):
         
         return {"loss": loss, "logits": logits}
 
-model = TimesformerForVideoClassification.from_pretrained(
-    checkpoint = PRETRAINED,
-    base_model_id = MODEL_ID,
-    num_labels=len(CLASSES),
-    problem_type="multi_label_classification"   # enables sigmoid in the head
-).to(DEVICE).eval()
+model = TimeSformer(
+    checkpoint=PRETRAINED,
+    base_model_id=MODEL_ID,
+    device=DEVICE,
+    num_classes=len(CLASSES),
+    num_frames=NUM_FRAMES
+)
 
 # ---------- 4.  Evaluation loop ----------------------------------------------
 
