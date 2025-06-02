@@ -177,24 +177,34 @@ y_true = labels.numpy()
 
 # ---------- 5.  Metrics -------------------------------------------------------
 
-threshold = 0.50
-y_pred_bin = (probas >= threshold).astype(int)
+def metrics_from_preds(y_true: np.ndarray, y_pred: np.ndarray):
+    """Return dict of class-wise and macro precision/recall/f1/accuracy."""
+    from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 
-# mean Average Precision (mAP)
-ap_per_class = [
-    average_precision_score(y_true[:, i], probas[:, i])
-    for i in range(len(CLASSES))
-]
-map_score = np.mean(ap_per_class)
+    assert y_true.shape == y_pred.shape
+    y_true_bin = y_true > 0.5
+    y_pred_bin = y_pred > 0.5
 
-# micro / macro F1
-f1_micro = f1_score(y_true, y_pred_bin, average="micro")
-f1_macro = f1_score(y_true, y_pred_bin, average="macro")
+    prec, rec, f1, _ = precision_recall_fscore_support(
+        y_true_bin, y_pred_bin, average=None, zero_division=0
+    )
+    prec_m, rec_m, f1_m, _ = precision_recall_fscore_support(
+        y_true_bin, y_pred_bin, average="macro", zero_division=0
+    )
+    acc_m = accuracy_score(y_true_bin, y_pred_bin)
 
-print(f"mAP : {map_score:6.4f}")
-print(f"F1-micro : {f1_micro:6.4f}")
-print(f"F1-macro : {f1_macro:6.4f}")
+    metrics = {f"{CLASSES[i]}/precision": prec[i] for i in range(4)}
+    metrics.update({f"{CLASSES[i]}/recall": rec[i] for i in range(4)})
+    metrics.update({f"{CLASSES[i]}/f1": f1[i] for i in range(4)})
+    metrics.update({
+        "macro/precision": prec_m,
+        "macro/recall": rec_m,
+        "macro/f1": f1_m,
+        "macro/accuracy": acc_m,
+    })
+    return metrics
 
-# Optional: per-class AP table
-for c, ap in zip(CLASSES, ap_per_class):
-    print(f"{c:20s}  {ap:6.4f}")
+
+metrics = metrics_from_preds(y_true, probas)
+summary = ", ".join([f"{k}={v:.4f}" for k, v in metrics.items() if k.startswith("macro/")])
+print(f"  [Test metrics] {summary}")
