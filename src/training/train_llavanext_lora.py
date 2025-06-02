@@ -255,7 +255,7 @@ def main(args):
 
     model = LlavaVideoClassifier(
         backbone=backbone,
-        hidden_size=backbone.config.hidden_size,
+        hidden_size=backbone.config.text_config.hidden_size,
         num_labels=NUM_LABELS,
         train_classifier_only=args.train_classifier_only,
     ).to(device)
