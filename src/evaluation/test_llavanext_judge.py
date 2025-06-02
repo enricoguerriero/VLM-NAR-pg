@@ -20,82 +20,40 @@ PROMPTS = [
 		# Baby visible (real baby vs. mannequin)
 		'''You are a precise evaluator. Respond with **just** yes or no.
         You are given a caption provided by a captioning model of a video, in a newborn resuscitation simulation context.
-        You need to determine if a baby is visible in the video based on the caption.
-
-		Definition of “yes”:
-			A real baby *or* a mannequin baby is visible in the clip.
-		Definition of “no”:
-			No baby and no mannequin is visible.
-
-		Example 1  
-		Description: "A mannequin / a doll representing a baby is present on the table."  
-		Answer: yes
-
-		Example 2  
-		Description: "There is a medical setting around a resuscitation table; no baby or mannequin is present."  
-		Answer: no
-
-		Now evaluate:  
-		Description: "{answer}"  
-		Question: Is a baby (real **or** mannequin, or doll) visible?
+        You need to determine if a baby is visible in the video based on the caption. 
+		Caption: "{answer}"  
+		Is the caption mentioning a doll / mannequin present in the video?
+        Answer with "Yes" or "No"
 		''',
 
 		# Ventilation (mask usage)
-		"""
+		'''
 		You are a precise evaluator. Answer only “yes” or “no”.
         You are given a caption provided by a captioning model of a video, in a newborn resuscitation simulation context.
         You need to determine if a ventilation mask is being used in the video based on the caption.
-
-		Example 1:
-			Description: “A mask covers the baby's mouth and nose to assist breathing / The baby is connected with a ventilator.”
-			Answer: yes
-
-		Example 2:
-			Description: “A tube is inserted but no mask is used.”
-			Answer: no
-
-		Now evaluate:
-		Description: '{answer}'
-		Question: Is a ventilation mask held over the baby's (or mannequin's, or doll's) mouth and nose? Or is the baby (or mannequin, or doll) connected to a ventilator? (A mask, not a tube.)
-		""",
+        Caption: "{answer}"
+        Is the caption mentioning a ventilation mask being used on the baby?
+        ''',
 
 		# Stimulation (up-and-down movements)
-		"""
+		'''
 		You are a precise evaluator. Answer only “yes” or “no”.
         You are given a caption provided by a captioning model of a video, in a newborn resuscitation simulation context.
         You need to determine if health workers are applying up-and-down stimulation to the baby's back, buttocks, or trunk based on the caption.
-
-		Example 1:
-			Description: “A health worker applies rhythmic up-and-down pressure on the baby's back / performing CPR.”
-			Answer: yes
-
-		Example 2:
-			Description: “No stimulation: only mask ventilation is performed.”
-			Answer: no
-
-		Now evaluate:
-		Description: '{answer}'
-		Question: Are health workers applying up-and-down stimulation to the baby's (or mannequin's, or doll's) back, buttocks, or trunk?
-		""",
+        Caption: "{answer}"
+        Is the caption mentioning health workers applying up-and-down stimulation to the baby's back, buttocks, or trunk?
+        Answer with "Yes" or "No"
+		''',
 
 		# Suction (small tube insertion)
-		"""
+		'''
 		You are a precise evaluator. Answer only “yes” or “no”.
         You are given a caption provided by a captioning model of a video, in a newborn resuscitation simulation context.
         You need to determine if a small suction tube is inserted into the baby's mouth or nose based on the caption.
-
-		Example 1:
-			Description: “A slender suction tube is inserted into the baby's mouth or nose.”
-			Answer: yes
-
-		Example 2:
-			Description: “No tube insertion; only a mask is used.”
-			Answer: no
-
-		Now evaluate:
-		Description: '{answer}'
-		Question: Is a small suction tube inserted into the baby's (or mannequin's, or doll's) mouth or nose? (Not a mask.)
-		"""
+        Caption: "{answer}"
+        Is the caption mentioning a small suction tube being inserted into the baby's mouth or nose?
+        Answer with "Yes" or "No"
+		'''
 ]
 
 
