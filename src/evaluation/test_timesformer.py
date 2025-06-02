@@ -13,7 +13,7 @@ import av
 
 # ---------- 1.  Config --------------------------------------------------------
 
-JSONL_TEST   = "data/test_balanced.jsonl"          # ← your test file
+JSONL_TEST   = "data/clips/test_balanced.jsonl"          # ← your test file
 PRETRAINED   = "models/TimeSformer/model.pth"  
 MODEL_ID = "facebook/timesformer-base-finetuned-ssv2"  # base model for TimeSformer
 BATCH_SIZE   = 4
