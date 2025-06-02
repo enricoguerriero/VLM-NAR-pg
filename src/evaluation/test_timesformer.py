@@ -51,8 +51,8 @@ class VideoJsonlDataset(Dataset):
                 break
             if i in indices:
                 frames.append(frame.to_ndarray(format="rgb24"))
-        if len(frames) != self.num_frames:     # Pad if video too short
-            frames.extend(frames[-1:] * (self.num_frames - len(frames)))
+        # if len(frames) != self.num_frames:     # Pad if video too short
+        #     frames.extend(frames[-1:] * (self.num_frames - len(frames)))
         return np.stack(frames)            # (T, H, W, 3)
 
     def __getitem__(self, idx):
