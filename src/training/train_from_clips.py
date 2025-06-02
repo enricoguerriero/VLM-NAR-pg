@@ -163,15 +163,15 @@ def main():
         logger.debug(f"Starting epoch {epoch}/{epochs}")
         model.train()
         
-        if unfreezing:
-            model.manage_unfreezing(
-                epoch=epoch,
-                epochs=epochs,
-                optimizer=optimizer,
-                scheduler=scheduler
-            )
-            logger.debug(f"Unfreezing model at epoch {epoch}")
-            logger.debug(f"Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+        # if unfreezing:
+        #     model.manage_unfreezing(
+        #         epoch=epoch,
+        #         epochs=epochs,
+        #         optimizer=optimizer,
+        #         scheduler=scheduler
+        #     )
+        #     logger.debug(f"Unfreezing model at epoch {epoch}")
+        #     logger.debug(f"Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
         
         logger.debug("Training...")
         train_loss, train_logits, train_labels = model.train_epoch(
