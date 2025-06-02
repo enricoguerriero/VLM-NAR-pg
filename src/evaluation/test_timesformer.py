@@ -164,7 +164,8 @@ with torch.no_grad():
         labels       = batch["labels"].to(DEVICE)
 
         out    = model(pixel_values=pixel_values)
-        logits = out.logits    # (B, |C|)
+        logits = out["logits"]    # (B, |C|)
+        loss  = out["loss"] if "loss" in out else None
         assert logits.shape == labels.shape
         all_logits.append(logits.cpu())
         all_labels.append(labels.cpu())
