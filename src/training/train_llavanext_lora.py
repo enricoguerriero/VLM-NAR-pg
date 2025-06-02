@@ -1,40 +1,3 @@
-# train_lora_llava_video.py
-"""
-Fine‑tune LLaVA‑NeXT with LoRA for multi‑label video classification
-===================================================================
-
-Dataset
--------
-* ``train.jsonl``, ``val.jsonl`` and ``test.jsonl`` with the format::
-    {"video": "path/to/file.avi", "labels": {"baby_visible": 1, "ventilation": 1, "stimulation": 0, "suction": 0}}
-
-Classes are **hard‑coded** as ``["baby_visible", "ventilation", "stimulation", "suction"]`` and **order matters**.
-
-Main steps
-~~~~~~~~~~
-1. Frame sampling (default 8 uniformly spaced frames) & prompt construction
-2. Processor → model (``LLaVA‑NeXT``) forward pass
-3. Mean‑pool **only the image/vision tokens** from the last hidden layer
-4. One‑layer classifier head (``Linear(hidden, 4)``)
-5. Weighted binary‑cross‑entropy with pos‑weights computed from train set
-6. Metrics (per‑class + macro Accuracy, Precision, Recall, F1) logged to **Weights & Biases**
-7. Toggle: ``--train_classifier_only`` to freeze everything except classifier, or jointly train LoRA + classifier
-
-Run example
-~~~~~~~~~~~
-```bash
-python train_lora_llava_video.py \
-    --train_json data/clips/train.jsonl \
-    --val_json   data/clips/val.jsonl   \
-    --test_json  data/clips/test.jsonl  \
-    --output_dir runs/exp1 \
-    --model_id  llava-hf/llava-next-large-430k \
-    --batch_size 2 --epochs 3 \
-    --caption_prompt "Describe the video briefly." \
-    --train_classifier_only false
-```
-"""
-
 import argparse
 import json
 import os
@@ -45,7 +8,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
-from torchvision.io import read_video
+import av
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 
 from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration
@@ -111,11 +74,21 @@ class VideoJsonlDataset(Dataset):
     def __len__(self):
         return len(self.records)
 
-    def _read_frames(self, video_path: str) -> List[torch.Tensor]:
-        video, _, _ = read_video(video_path, pts_unit="sec")  # shape: (T, H, W, C)
-        indices = uniform_frame_indices(len(video), self.num_frames)
-        frames = video[indices]  
-        return frames
+    def _read_video_pyav(self, filepath: str) -> np.ndarray:
+        """Decode *num_frames* RGB frames, uniformly sampled across the clip."""
+        container = av.open(filepath)
+        total = container.streams.video[0].frames
+        indices = np.linspace(0, total - 1, self.num_frames, dtype=int)
+
+        frames = []
+        for i, frame in enumerate(container.decode(video=0)):
+            if i > indices[-1]:
+                break
+            if i in indices:
+                frames.append(frame.to_ndarray(format="rgb24"))
+        if len(frames) != self.num_frames:     # Pad if video too short
+            frames.extend(frames[-1:] * (self.num_frames - len(frames)))
+        return np.stack(frames)            # (T, H, W, 3)
 
     def __getitem__(self, idx):
         rec = self.records[idx]
