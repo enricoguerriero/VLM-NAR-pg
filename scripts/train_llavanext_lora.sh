@@ -18,19 +18,20 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
 
 python src/training/train_llavanext_lora.py \
-    --data_dir data/clips \
-    --model_name "llava-hf/LLaVA-NeXT-Video-7B-hf" \
-    --output_dir models/llavanext_lora \
-    --wandb_project llavanext_lora \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 8 \
-    --num_train_epochs 2 \
+    --train_json data/clips/train.jsonl \
+    --val_json data/clips/val.jsonl \
+    --test_json data/clips/test.jsonl \
+    --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
+    --output_dir outputs/llavanext_lora \
+    --batch_size 2 \
+    --epochs 2 \
     --lr 5e-5 \
     --num_frames 16 \
-    --fp16 \
     --lora_r 16 \
     --lora_alpha 32 \
-    --lora_dropout 0.1 
+    --lora_dropout 0.1 \
+    --wandb_project llavanext_lora \
+    --run_name llavanext_lora_run 
+
 
 echo "--- THE END ---"
