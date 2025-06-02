@@ -158,7 +158,7 @@ class LlavaVideoClassifier(nn.Module):
 
 
 # ------------------------
-# 4.  TRAIN UTILITIES
+# 4.  METRICS & TRAIN UTILITIES
 # ------------------------
 def compute_pos_weights(loader: DataLoader, device: str = "cpu") -> torch.Tensor:
     """Compute positive class weights (neg/pos) over an entire DataLoader."""
@@ -171,6 +171,34 @@ def compute_pos_weights(loader: DataLoader, device: str = "cpu") -> torch.Tensor
     neg = total - pos
     pos_weight = neg / pos.clamp(min=1)
     return pos_weight
+
+
+def metrics_from_preds(y_true: np.ndarray, y_pred: np.ndarray):
+    """Return dict of class-wise and macro precision/recall/f1/accuracy."""
+    from sklearn.metrics import precision_recall_fscore_support, accuracy_score
+
+    assert y_true.shape == y_pred.shape
+    y_true_bin = y_true > 0.5
+    y_pred_bin = y_pred > 0.5
+
+    prec, rec, f1, _ = precision_recall_fscore_support(
+        y_true_bin, y_pred_bin, average=None, zero_division=0
+    )
+    prec_m, rec_m, f1_m, _ = precision_recall_fscore_support(
+        y_true_bin, y_pred_bin, average="macro", zero_division=0
+    )
+    acc_m = accuracy_score(y_true_bin, y_pred_bin)
+
+    metrics = {f"{CLASSES[i]}/precision": prec[i] for i in range(NUM_LABELS)}
+    metrics.update({f"{CLASSES[i]}/recall": rec[i] for i in range(NUM_LABELS)})
+    metrics.update({f"{CLASSES[i]}/f1": f1[i] for i in range(NUM_LABELS)})
+    metrics.update({
+        "macro/precision": prec_m,
+        "macro/recall": rec_m,
+        "macro/f1": f1_m,
+        "macro/accuracy": acc_m,
+    })
+    return metrics
 
 
 def build_conversation(prompt: str) -> List[Dict]:
@@ -187,7 +215,7 @@ def build_conversation(prompt: str) -> List[Dict]:
 
 
 # ------------------------
-# 5.  MAIN LOOP (TRAIN ONLY)
+# 5.  MAIN LOOP (TRAIN ONLY, WITH METRICS)
 # ------------------------
 def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -255,7 +283,6 @@ def main(args):
 
             optim.zero_grad()
             logits = model(pixel_values_videos, input_ids, attn, video_mask)  # (B, num_labels)
-            # If you want to average logits over some dimension, adjust here. By default it's (B, num_labels).
             loss = criterion(logits, labels)
             loss.backward()
             optim.step()
@@ -266,18 +293,45 @@ def main(args):
         wandb.log({"train/loss": train_loss}, step=epoch)
         print(f"Epoch {epoch+1}/{args.epochs} | train_loss={train_loss:.4f}")
 
+        # ----- Compute metrics on the entire training set -----
+        model.eval()
+        all_logits, all_labels = [], []
+        with torch.no_grad():
+            for batch in train_loader:
+                pixel_values_videos = batch["pixel_values_videos"].to(device)
+                input_ids = batch["input_ids"].to(device)
+                attn = batch["attention_mask"].to(device)
+                video_mask = batch["video_token_mask"].to(device)
+                labels = batch["labels"].to(device)
+
+                logits = model(pixel_values_videos, input_ids, attn, video_mask)
+                probs = torch.sigmoid(logits)  # (B, num_labels)
+                all_logits.append(probs.cpu())
+                all_labels.append(labels.cpu())
+                print(f"Logits shape: {logits.shape}, Labels shape: {labels.shape}")
+
+        y_pred = torch.cat(all_logits).numpy()
+        y_true = torch.cat(all_labels).numpy()
+        train_metrics = metrics_from_preds(y_true, y_pred)
+        # Log each metric with prefix "train/"
+        wandb.log({f"train/{k}": v for k, v in train_metrics.items()}, step=epoch)
+
+        # Print a summary to console
+        summary = ", ".join([f"{k}={v:.4f}" for k, v in train_metrics.items() if k.startswith("macro/")])
+        print(f"  [Training metrics] {summary}")
+
     # Save final model
     os.makedirs(args.output_dir, exist_ok=True)
     save_path = os.path.join(args.output_dir, "model_final.pt")
     torch.save(model.state_dict(), save_path)
-    print(f"Training complete. Model saved to {save_path}")
+    print(f"\nTraining complete. Model saved to {save_path}")
 
 
 # ------------------------
 # 6.  ARGPARSE
 # ------------------------
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train LLaVA-NeXT classifier on video (train-only).")
+    parser = argparse.ArgumentParser(description="Train LLaVA-NeXT classifier on video (train-only, with metrics).")
     parser.add_argument("--train_json", type=str, required=True, help="Path to training JSONL file")
     parser.add_argument("--model_id", type=str, default="llava-hf/llava-next-large-430k")
     parser.add_argument("--output_dir", type=str, default="outputs")
@@ -294,7 +348,7 @@ if __name__ == "__main__":
 
     # WandB
     parser.add_argument("--wandb_project", type=str, default="llava-video")
-    parser.add_argument("--run_name", type=str, default="train_only")
+    parser.add_argument("--run_name", type=str, default="train_only_metrics")
 
     args = parser.parse_args()
 
