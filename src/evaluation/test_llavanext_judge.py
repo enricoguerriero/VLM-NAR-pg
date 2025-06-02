@@ -219,7 +219,8 @@ def main():
     
     # Model / processor
     dtype = torch.float16 if args.half else torch.float32
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:1")
+    judge_device = torch.device("cuda:5")
     model = LlavaNextVideoForConditionalGeneration.from_pretrained(
         args.model, torch_dtype=dtype, device_map="auto"
     )
@@ -228,8 +229,7 @@ def main():
     model.eval()
     
     judge = AutoModelForCausalLM.from_pretrained(MODEL_JUDGE,
-				device_map="cuda",
-				torch_dtype=torch.float16,)
+				torch_dtype=torch.float16,).to(judge_device)
     judge_processor = AutoTokenizer.from_pretrained(MODEL_JUDGE)
     judge_pipe = TextGenerationPipeline(
             model = judge,
@@ -257,7 +257,7 @@ def main():
         true_label = sample["labels"]
         
         for class_idx, label in enumerate(label_names):
-            judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
+            judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " ")).to(judge_device)
             judge_raw = judge_pipe(
                     judge_prompt,
                     max_new_tokens = 15,
