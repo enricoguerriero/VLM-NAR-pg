@@ -125,6 +125,7 @@ class VideoJsonlDataset(Dataset):
         prompt = self.prompt_template
         prompt_text = self.processor.apply_chat_template(prompt, add_generation_prompt=True)
         processed = self.processor(text=prompt_text, videos=frames, return_tensors="pt")
+        print("Processor output keys:", processed.keys(), flush=True)
         # processor returns dict with pixel_values (F, C, H, W) & tokenized text
         pixel_values_videos = processed["pixel_values_videos"]  # (F, C, H, W)
         input_ids = processed["input_ids"].squeeze(0)  # (T,)
