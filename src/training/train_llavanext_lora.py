@@ -74,7 +74,7 @@ class VideoJsonlDataset(Dataset):
     def __len__(self):
         return len(self.records)
 
-    def _read_video_pyav(self, filepath: str) -> np.ndarray:
+    def _read_frames(self, filepath: str) -> np.ndarray:
         """Decode *num_frames* RGB frames, uniformly sampled across the clip."""
         container = av.open(filepath)
         total = container.streams.video[0].frames
