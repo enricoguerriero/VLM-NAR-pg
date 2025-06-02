@@ -206,5 +206,23 @@ def metrics_from_preds(y_true: np.ndarray, y_pred: np.ndarray):
 
 
 metrics = metrics_from_preds(y_true, probas)
-summary = ", ".join([f"{k}={v:.4f}" for k, v in metrics.items() if k.startswith("macro/")])
-print(f"  [Test metrics] {summary}")
+
+print("\n=== Evaluation Metrics ===\n")
+class_names = sorted(set(k.split("/")[0] for k in metrics if "/" in k and not k.startswith("macro")))
+
+# Header
+print(f"{'Class':<15} {'Precision':>10} {'Recall':>10} {'F1-Score':>10}")
+print("-" * 50)
+
+# Per-class metrics
+for cls in class_names:
+    p = metrics.get(f"{cls}/precision", 0)
+    r = metrics.get(f"{cls}/recall", 0)
+    f = metrics.get(f"{cls}/f1", 0)
+    print(f"{cls:<15} {p:10.3f} {r:10.3f} {f:10.3f}")
+
+print("\n--- Macro Averages ---")
+print(f"{'Macro Precision':<20}: {metrics['macro/precision']:.3f}")
+print(f"{'Macro Recall':<20}: {metrics['macro/recall']:.3f}")
+print(f"{'Macro F1-Score':<20}: {metrics['macro/f1']:.3f}")
+print(f"{'Macro Accuracy':<20}: {metrics['macro/accuracy']:.3f}")
