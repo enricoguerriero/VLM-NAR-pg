@@ -108,8 +108,8 @@ class TimeSformer(nn.Module):
         
         config = TimesformerConfig.from_pretrained(base_model_id)
         self.processor = AutoImageProcessor.from_pretrained(base_model_id)
-        self.backbone = TimesformerForVideoClassification.from_pretrained(checkpoint)
-        self.backbone.classifier = nn.Identity()
+        self.backbone = TimesformerForVideoClassification.from_pretrained(base_model_id)
+        # self.backbone.classifier = nn.Identity()
         
         if num_frames != 8:  # 8 = default number of frames for SSV2 pretraining
             self.interpolate_pos_encoding(num_frames=num_frames)
@@ -122,6 +122,11 @@ class TimeSformer(nn.Module):
             param.requires_grad = False
         for param in self.classifier.parameters():
             param.requires_grad = True
+        
+        
+        if checkpoint is not None:
+            state_dict = torch.load(checkpoint, map_location=self.device)
+            self.load_state_dict(state_dict)
 
         
     def forward(self, pixel_values, labels = None, loss_fct = None): 
