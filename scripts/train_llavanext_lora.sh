@@ -21,6 +21,7 @@ python src/training/train_llavanext_lora.py \
     --data_dir data/clips \
     --model_name "llava-hf/LLaVA-NeXT-Video-7B-hf" \
     --output_dir models/llavanext_lora \
+    --wandb_project llavanext_lora \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 8 \
