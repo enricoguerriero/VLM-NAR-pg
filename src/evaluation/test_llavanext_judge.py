@@ -216,6 +216,7 @@ def main():
         
         for class_idx, label in enumerate(label_names):
             judge_prompt = PROMPTS[class_idx].replace("{answer}", caption.replace("\n", " "))
+            print(f"[JUDGE] {label} - {judge_prompt}", flush=True)
             judge_raw = judge_pipe(
                     judge_prompt,
                     max_new_tokens = 15,
