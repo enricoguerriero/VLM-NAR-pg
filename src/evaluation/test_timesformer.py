@@ -59,7 +59,7 @@ class VideoJsonlDataset(Dataset):
         rec = self.records[idx]
         frames = self._read_frames(rec["video"])  # (T, H, W, 3)
 
-        processed = self.processor(frames, return_tensors="pt")
+        processed = self.processor([frame for frame in frames], return_tensors="pt")
 
         pixel_values = processed["pixel_values"]  # (F, C, H, W)
 
