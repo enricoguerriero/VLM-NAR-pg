@@ -78,7 +78,7 @@ def collate_fn(batch):
     - stack pixel_values 
     - stack label vectors
     """
-    pix = torch.stack([item["pixel_values"] for item in batch])  
+    pix = torch.cat([item["pixel_values"] for item in batch])  
     lab = torch.stack([item["labels"] for item in batch])
     return {"pixel_values": pix, "labels": lab}
 
