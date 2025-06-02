@@ -15,6 +15,7 @@ import av
 
 JSONL_TEST   = "data/test_balanced.jsonl"          # ← your test file
 PRETRAINED   = "models/TimeSformer/model.pth"  
+MODEL_ID = "facebook/timesformer-base-finetuned-ssv2"  # base model for TimeSformer
 BATCH_SIZE   = 4
 NUM_FRAMES   = 8                          # must match dataset + model
 DEVICE       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -96,6 +97,7 @@ test_loader = DataLoader(
 class TimeSformer(nn.Module):
     
     def __init__(self,  
+                 checkpoint: str = "facebook/timesformer-base-finetuned-ssv2",
                  base_model_id: str = "facebook/timesformer-base-finetuned-ssv2", 
                  device: str = "cuda", 
                  num_classes: int = 4,
@@ -108,7 +110,7 @@ class TimeSformer(nn.Module):
         
         config = TimesformerConfig.from_pretrained(base_model_id)
         self.processor = AutoImageProcessor.from_pretrained(base_model_id)
-        self.backbone = TimesformerForVideoClassification.from_pretrained(base_model_id)
+        self.backbone = TimesformerForVideoClassification.from_pretrained(checkpoint)
         self.backbone.classifier = nn.Identity()
         
         if num_frames != 8:  # 8 = default number of frames for SSV2 pretraining
@@ -141,7 +143,8 @@ class TimeSformer(nn.Module):
         return {"loss": loss, "logits": logits}
 
 model = TimesformerForVideoClassification.from_pretrained(
-    PRETRAINED,
+    checkpoint = PRETRAINED,
+    base_model_id = MODEL_ID,
     num_labels=len(CLASSES),
     problem_type="multi_label_classification"   # enables sigmoid in the head
 ).to(DEVICE).eval()
