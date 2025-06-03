@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# test_llava_video_classifier.py
-
 import argparse
 import json
 import os
