@@ -17,7 +17,7 @@ echo "virtual environment activated"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
 
-python test_llava_video_classifier.py \
+python src/evaluation/inference_llavanext.py \
   --test_json data/clips/test_balanced.jsonl \
   --model_path outputs/llavanext_lora/model_final.pt \
   --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \

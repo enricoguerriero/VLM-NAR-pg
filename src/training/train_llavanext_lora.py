@@ -215,7 +215,7 @@ def build_conversation(prompt: str) -> List[Dict]:
 
 
 # ------------------------
-# 5.  MAIN LOOP (TRAIN ONLY, WITH METRICS + OPTIONAL TEST)
+# 5.  MAIN LOOP 
 # ------------------------
 def main(args):
 
