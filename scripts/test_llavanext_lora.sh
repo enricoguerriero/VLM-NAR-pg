@@ -18,15 +18,15 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=./
 
 python test_llava_video_classifier.py \
-  --test_json path/to/test_data.jsonl \
-  --model_path outputs/model_final.pt \
-  --model_id llava-hf/llava-next-large-430k \
+  --test_json data/clips/test_balanced.jsonl \
+  --model_path outputs/llavanext_lora/model_final.pt \
+  --model_id llava-hf/LLaVA-NeXT-Video-7B-hf \
   --batch_size 2 \
-  --num_frames 8 \
+  --num_frames 16 \
   --use_lora \
-  --lora_r 8 \
-  --lora_alpha 16 \
-  --lora_dropout 0.05 \
-  --output_metrics results/test_metrics.json
+  --lora_r 16 \
+  --lora_alpha 32 \
+  --lora_dropout 0.1 \
+  --output_metrics outputs/test_metrics.json
 
 echo "--- THE END ---"
