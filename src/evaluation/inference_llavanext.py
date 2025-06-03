@@ -251,17 +251,17 @@ def main(args):
     all_logits, all_labels = [], []
     with torch.no_grad():
         for batch in tqdm(test_loader, desc="Testing", unit="batch"):
-            pixel_values_videos = batch["pixel_values_videos"].to(device)       # (B, F, C, H, W)
+            pixel_values_videos = batch["pixel_values_videos"].squeeze(1).to(device)       # (B, F, C, H, W)
             input_ids = batch["input_ids"].to(device)                           # (B, T)
             attn = batch["attention_mask"].to(device)                           # (B, T)
-            video_mask = batch["video_token_mask"].to(device)                   # (B, T)
+            video_mask = batch["video_token_mask"].squeeze(1).to(device)                   # (B, T)
             labels = batch["labels"].to(device)                                  # (B, num_labels)
             
-            print(f"\nPixel values shape: {pixel_values_videos.shape}", flush=True)
-            print(f"Input IDs shape: {input_ids.shape}", flush=True)
-            print(f"Attention mask shape: {attn.shape}", flush=True)
-            print(f"Video token mask shape: {video_mask.shape}", flush=True)
-            print(f"Labels shape: {labels.shape}", flush=True)
+            # print(f"\nPixel values shape: {pixel_values_videos.shape}", flush=True)
+            # print(f"Input IDs shape: {input_ids.shape}", flush=True)
+            # print(f"Attention mask shape: {attn.shape}", flush=True)
+            # print(f"Video token mask shape: {video_mask.shape}", flush=True)
+            # print(f"Labels shape: {labels.shape}", flush=True)
             
             logits = model(pixel_values_videos, input_ids, attn, video_mask)    # (B, num_labels)
             probs = torch.sigmoid(logits)                                       # (B, num_labels)
