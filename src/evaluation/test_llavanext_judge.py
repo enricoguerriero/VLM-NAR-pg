@@ -41,7 +41,7 @@ PROMPTS = [
         # ''',
         '''
         Caption: "{answer}"
-        Is the caption mentioning a ventilation mask over the face of a baby?
+        Is the caption mentioning a baby attached to a ventilator, a baby being mechanically ventilated or a ventilation mask over its face?
         Reply “Yes” or “No”.''',
 
 		# Stimulation (up-and-down movements)
